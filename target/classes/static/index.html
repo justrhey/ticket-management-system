@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Management System</title>
+    <link rel="stylesheet" href="/css/index.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <span>Visrspacio Help Desk Ticket Queue List</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search tickets...">
+                <button class="btn btn-primary" onclick="searchTickets()">Search</button>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="openCreateModal()">+ New Ticket</button>
+            </div>
+        </div>
+
+        <!-- Ticket List -->
+        <div class="ticket-list" id="ticketList">
+            <div class="ticket-header">
+                <div>ID</div>
+                <div>Subject</div>
+                <div>Requester</div>
+                <div>Status</div>
+                <div>Priority</div>
+                <div>Created</div>
+            </div>
+            <!-- Tickets will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Create Ticket Modal -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Submit a New Ticket</h2>
+            </div>
+            <div class="modal-body">
+                <form id="createForm">
+                    <!-- Contact Information Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Contact Information</h3>
+                        <div class="form-group">
+                            <label class="required">Your Full Name</label>
+                            <input type="text" class="form-input" id="fullName" required>
+                        </div>
+                    </div>
+
+                    <!-- Ticket Details Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Ticket Details</h3>
+                        
+                        <div class="form-group">
+                            <label class="required">Subject</label>
+                            <div class="category-grid">
+                                <div class="category-option" onclick="selectCategory(this, 'Technical Support')">Technical Support</div>
+                                <div class="category-option" onclick="selectCategory(this, 'Billing Inquiry')">Billing Inquiry</div>
+                                <div class="category-option" onclick="selectCategory(this, 'General Question')">General Question</div>
+                                <div class="category-option" onclick="selectCategory(this, 'Feature Request')">Feature Request</div>
+                                <div class="category-option" onclick="selectCategory(this, 'Account Issue')">Account Issue</div>
+                                <div class="category-option" onclick="selectCategory(this, 'Bug Report')">Bug Report</div>
+                            </div>
+                            <input type="hidden" id="subject" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required">Priority</label>
+                            <select class="form-select" id="priority" required>
+                                <option value="">Select Priority</option>
+                                <option value="LOW">Low</option>
+                                <option value="MEDIUM">Medium</option>
+                                <option value="HIGH">High</option>
+                                <option value="URGENT">Urgent</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Assigned To</label>
+                            <input type="text" class="form-input" id="assignedPerson" placeholder="Optional - assign to team member">
+                        </div>
+                    </div>
+
+                    <!-- Description Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Description</h3>
+                        <div class="form-group">
+                            <label class="required">Provide a detailed explanation</label>
+                            <textarea class="form-textarea" id="intent" placeholder="Please provide as much detail as possible..." required></textarea>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Loading State for Create Modal -->
+                <div id="create-loading" class="create-loading hidden">
+                    <div class="loading-spinner"></div>
+                    <p>Submitting ticket and sending notification...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeCreateModal()" id="cancel-btn">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createTicketFromForm()" id="submit-btn">
+                    Submit Ticket
+                </button>
+            </div>
+        </div>
+    </div>
+
+<div id="successModal" class="modal">
+    <div class="modal-content" style="max-width: 400px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <div class="modal-header" style="background: #28a745; padding: 1rem; color: white;">
+            <h2 style="margin: 0;">Success!</h2>
+        </div>
+        <div class="modal-body">
+            <div style="text-align: center; padding: 1rem;">
+                <!-- Your custom meme image -->
+                <img src="./image/success.webp" alt="Success Meme" style="width: 100%; max-width: 300px; height: auto; margin-bottom: 1rem; border-radius: 4px;">
+                <p id="success-message" style="font-size: 1.1rem; color: #333;">Ticket created successfully!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

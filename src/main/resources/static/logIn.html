@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Visrspacio Help Desk</title>
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-form">
+            <h2>Visrspacio Help Desk</h2>
+            <p>Please sign in to your account</p>
+            
+            <div id="errorMessage" class="error-message" style="display: none;">
+                Invalid email or password. Please try again.
+            </div>
+            
+            <!-- NO CLIENT-SIDE VALIDATION - let server handle everything -->
+            <form id="loginForm" method="POST" action="/login">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="text" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="login-btn">Sign In</button>
+            </form>
+            
+        </div>
+    </div>
+
+    <script>
+        // Only show error message, no validation
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error') === 'true') {
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

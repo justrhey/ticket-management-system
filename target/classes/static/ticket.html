@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Management - Table View</title>
+    <link rel="stylesheet" href="/css/table-style.css">
+    <style>
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 1rem 1.5rem;
+            background: #0041d8;
+            color: white;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            border-radius: 0 0 8px 8px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group label.required::after {
+            content: " *";
+            color: #dc3545;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background: #0041d8;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Hidden utility */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>Virspacio Ticket Management</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="refreshTable()">Refresh</button>
+                <button class="btn btn-success" onclick="bulkAction()">Bulk Action</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="content-wrapper">
+            <!-- Sidebar Checklist -->
+            <aside class="checklist-sidebar">
+                <div class="sidebar-header">
+                    <h3>Filters & Selection</h3>
+                </div>
+                
+                <!-- Bulk Actions -->
+                <div class="bulk-actions">
+                    <h4>Selected Tickets (<span id="selected-count">0</span>)</h4>
+                    <button class="btn btn-small" onclick="selectAll()">Select All</button>
+                    <button class="btn btn-small" onclick="clearSelection()">Clear</button>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="filter-group">
+                    <h4>Status</h4>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="OPEN" checked onchange="updateFilters()">
+                        <span class="checkmark"></span>
+                        Open
+                        <span class="count-badge" id="count-OPEN">0</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="IN_PROGRESS" checked onchange="updateFilters()">
+                        <span class="checkmark"></span>
+                        In Progress
+                        <span class="count-badge" id="count-IN_PROGRESS">0</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="RESOLVED" onchange="updateFilters()">
+                        <span class="checkmark"></span>
+                        Resolved
+                        <span class="count-badge" id="count-RESOLVED">0</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="CLOSED" onchange="updateFilters()">
+                        <span class="checkmark"></span>
+                        Closed
+                        <span class="count-badge" id="count-CLOSED">0</span>
+                    </label>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="stats-group">
+                    <h4>Quick Stats</h4>
+                    <div class="stat-item">
+                        <span>Total Tickets:</span>
+                        <strong id="stat-total">0</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Open:</span>
+                        <strong id="stat-open">0</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Due Today:</span>
+                        <strong id="stat-due-today">0</strong>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Table Area -->
+            <main class="table-container">
+                <!-- Table Controls -->
+                <div class="table-controls">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="Search tickets..." 
+                               onkeyup="debouncedSearch()">
+                        <span class="search-icon">⌕</span>
+                    </div>
+                    
+                    <div class="view-options">
+                        <select id="sort-select" onchange="updateSorting()">
+                            <option value="createdAt,desc">Newest First</option>
+                            <option value="createdAt,asc">Oldest First</option>
+                            <option value="priority,desc">Priority (High to Low)</option>
+                            <option value="priority,asc">Priority (Low to High)</option>
+                            <option value="title,asc">Title (A-Z)</option>
+                        </select>
+                        
+                        <select id="page-size" onchange="changePageSize()">
+                            <option value="10">10 per page</option>
+                            <option value="25" selected>25 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="100">100 per page</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tickets Table -->
+                <div class="table-wrapper">
+                    <table class="tickets-table">
+                        <thead>
+                            <tr>
+                                <th class="select-column">
+                                    <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)">
+                                </th>
+                                <th class="id-column">ID</th>
+                                <th class="title-column">Title</th>
+                                <th class="status-column">Status</th>
+                                <th class="priority-column">Priority</th>
+                                <th class="assignee-column">Assignee</th>
+                                <th class="date-column">Created</th>
+                                <th class="actions-column">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loading-state" class="loading-state hidden">
+                    <div class="loading-spinner"></div>
+                    <span>Loading tickets...</span>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state hidden">
+                    <p>No tickets found matching your criteria.</p>
+                    <button class="btn btn-primary" onclick="clearFilters()">Clear Filters</button>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Showing <span id="page-start">0</span> to <span id="page-end">0</span> 
+                        of <span id="total-items">0</span> tickets
+                    </div>
+                    
+                    <div class="pagination-controls">
+                        <button class="pagination-btn" id="first-page" onclick="goToPage(1)" disabled>
+                            « First
+                        </button>
+                        <button class="pagination-btn" id="prev-page" onclick="previousPage()" disabled>
+                            ‹ Previous
+                        </button>
+                        
+                        <div class="page-numbers" id="page-numbers">
+                            <!-- Page numbers will be inserted here -->
+                        </div>
+                        
+                        <button class="pagination-btn" id="next-page" onclick="nextPage()" disabled>
+                            Next ›
+                        </button>
+                        <button class="pagination-btn" id="last-page" onclick="goToPage(1)" disabled>
+                            Last »
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Action Modals -->
+    <!-- Edit Ticket Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Ticket</h2>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <div class="form-group">
+                        <label class="required">Subject</label>
+                        <input type="text" class="form-input" id="edit-subject" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Status</label>
+                        <select class="form-select" id="edit-status" required>
+                            <option value="OPEN">Open</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="RESOLVED">Resolved</option>
+                            <option value="CLOSED">Closed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Priority</label>
+                        <select class="form-select" id="edit-priority" required>
+                            <option value="LOW">Low</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="HIGH">High</option>
+                            <option value="URGENT">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned To</label>
+                        <input type="text" class="form-input" id="edit-assignedPerson">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-textarea" id="edit-intent"></textarea>
+                    </div>
+                    <input type="hidden" id="edit-ticketId">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveTicketEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Ticket Modal -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ticket Details</h2>
+            </div>
+            <div class="modal-body">
+                <div class="ticket-details">
+                    <div class="detail-row">
+                        <label>Ticket ID:</label>
+                        <span id="view-id"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Subject:</label>
+                        <span id="view-subject"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Requester:</label>
+                        <span id="view-requester"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Status:</label>
+                        <span id="view-status"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Priority:</label>
+                        <span id="view-priority"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Assigned To:</label>
+                        <span id="view-assigned"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Created:</label>
+                        <span id="view-created"></span>
+                    </div>
+                    <div class="detail-row full-width">
+                        <label>Description:</label>
+                        <div id="view-description" class="description-content"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions Modal -->
+    <div id="bulkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Bulk Actions</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Action</label>
+                    <select class="form-select" id="bulk-action">
+                        <option value="">Select Action</option>
+                        <option value="assign">Assign Tickets</option>
+                        <option value="change-status">Change Status</option>
+                        <option value="change-priority">Change Priority</option>
+                        <option value="close">Close Tickets</option>
+                        <option value="delete">Delete Tickets</option>
+                    </select>
+                </div>
+                <div class="form-group" id="bulk-assign-field" style="display: none;">
+                    <label>Assign To</label>
+                    <input type="text" class="form-input" id="bulk-assignee" placeholder="Enter assignee name">
+                </div>
+                <div class="form-group" id="bulk-status-field" style="display: none;">
+                    <label>New Status</label>
+                    <select class="form-select" id="bulk-status">
+                        <option value="OPEN">Open</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="RESOLVED">Resolved</option>
+                        <option value="CLOSED">Closed</option>
+                    </select>
+                </div>
+                <div class="form-group" id="bulk-priority-field" style="display: none;">
+                    <label>New Priority</label>
+                    <select class="form-select" id="bulk-priority">
+                        <option value="LOW">Low</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="HIGH">High</option>
+                        <option value="URGENT">Urgent</option>
+                    </select>
+                </div>
+                <div class="selected-info">
+                    <p>This action will affect <strong id="bulk-count">0</strong> selected tickets.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeBulkModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="executeBulkAction()">Apply Action</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Confirm Delete</h2>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this ticket?</p>
+                <p><strong>This action cannot be undone.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">Delete Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Notification Modal -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header" id="notification-header">
+                <h2 id="notification-title">Notification</h2>
+            </div>
+            <div class="modal-body">
+                <p id="notification-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="closeNotificationModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/table-manager.js"></script>
+</body>
+</html>
