@@ -32,15 +32,4 @@ public class TicketValidatorService {
         return true;
     }
     
-    // Optional: Add more validation methods
-    public boolean isValidEmail(String email) {
-        return email != null && 
-               email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
-    }
-    
-    public boolean isValidSubject(String subject) {
-        return subject != null && 
-               subject.length() >= 5 && 
-               subject.length() <= 200;
-    }
 }

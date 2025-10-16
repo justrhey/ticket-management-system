@@ -15,7 +15,6 @@ public class UserService {
         return userOpt.isPresent() && userOpt.get().getPassword().equals(password);
     }
     
-    // ADD THIS MISSING METHOD
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }

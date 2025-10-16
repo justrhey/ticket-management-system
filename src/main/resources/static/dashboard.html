@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Visrspacio Help Desk</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>Visrspacio Help Desk Dashboard</h1>
+            <div class="header-actions">
+                <button class="btn btn-outline btn-small" onclick="refreshDashboard()">
+                    Refresh
+                </button>
+                <a href="/logout" class="btn btn-outline btn-small logout-btn">
+                    Logout
+                </a>
+            </div>
+        </header>
+
+        <div class="content-wrapper">
+            <!-- Sidebar -->
+            <div class="dashboard-sidebar">
+                <div class="sidebar-header">
+                    <h3>Dashboard Overview</h3>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="quick-stats">
+                    <div class="quick-stat-item">
+                        <span class="label">Today's Tickets</span>
+                        <span class="value" id="todayTickets">0</span>
+                    </div>
+                    <div class="quick-stat-item">
+                        <span class="label">This Week</span>
+                        <span class="value" id="weekTickets">0</span>
+                    </div>
+                    <div class="quick-stat-item">
+                        <span class="label">Response Rate</span>
+                        <span class="value" id="responseRate">0%</span>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h4>Quick Actions</h4>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="location.href='/'">
+                            View All Tickets
+                        </button>
+                        <button class="btn btn-success" onclick="location.href='/?create=new'">
+                            Create New Ticket
+                        </button>
+                        <button class="btn btn-outline" onclick="exportData()">
+                            Export Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="status-filter">
+                    <h4>Filter by Status</h4>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-open" checked onchange="filterTickets()">
+                        <span class="checkmark"></span>
+                        <label for="filter-open">Open</label>
+                        <span class="count-badge" id="count-open">0</span>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-in-progress" checked onchange="filterTickets()">
+                        <span class="checkmark"></span>
+                        <label for="filter-in-progress">In Progress</label>
+                        <span class="count-badge" id="count-in-progress">0</span>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-resolved" onchange="filterTickets()">
+                        <span class="checkmark"></span>
+                        <label for="filter-resolved">Resolved</label>
+                        <span class="count-badge" id="count-resolved">0</span>
+                    </div>
+                    <div class="filter-item">
+                        <input type="checkbox" id="filter-closed" onchange="filterTickets()">
+                        <span class="checkmark"></span>
+                        <label for="filter-closed">Closed</label>
+                        <span class="count-badge" id="count-closed">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="dashboard-main">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card total">
+                        <div class="stat-icon">T</div>
+                        <div class="stat-info">
+                            <h3 id="totalTickets">0</h3>
+                            <p>Total Tickets</p>
+                        </div>
+                    </div>
+                    <div class="stat-card open">
+                        <div class="stat-icon">O</div>
+                        <div class="stat-info">
+                            <h3 id="openTickets">0</h3>
+                            <p>Open Tickets</p>
+                        </div>
+                    </div>
+                    <div class="stat-card closed">
+                        <div class="stat-icon">C</div>
+                        <div class="stat-info">
+                            <h3 id="closedTickets">0</h3>
+                            <p>Closed Tickets</p>
+                        </div>
+                    </div>
+                    <div class="stat-card assigned">
+                        <div class="stat-icon">A</div>
+                        <div class="stat-info">
+                            <h3 id="assignedTickets">0</h3>
+                            <p>Assigned Tickets</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <div class="section-header">
+                        <h2>Recent Activity</h2>
+                        <button class="btn btn-outline btn-small" onclick="loadRecentTickets()">
+                            Refresh
+                        </button>
+                    </div>
+                    
+                    <div class="activity-list" id="activityList">
+                        <div class="loading-state">
+                            <div class="loading-spinner"></div>
+                            <p>Loading activities...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

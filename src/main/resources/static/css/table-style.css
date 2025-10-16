@@ -1,3 +1,4 @@
+/* Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -13,6 +14,11 @@ body {
     overflow: hidden;
 }
 
+.hidden {
+    display: none;
+}
+
+/* Layout */
 .app-container {
     height: 100vh;
     display: flex;
@@ -49,6 +55,7 @@ body {
     overflow: hidden;
 }
 
+/* Sidebar */
 .checklist-sidebar {
     width: 280px;
     background: white;
@@ -222,7 +229,7 @@ body {
     max-height: 720px;
 }
 
-/* SIMPLE TABLE STRUCTURE - No complex display properties */
+/* Table Structure */
 .tickets-table {
     width: 100%;
     border-collapse: collapse;
@@ -283,7 +290,7 @@ body {
     background-color: #f8f9fa;
 }
 
-/* COLUMN WIDTHS - Simple and proportional */
+/* Column Widths */
 .select-column { width: 50px; text-align: center; }
 .id-column { width: 30px; }
 .title-column { width: 300px; }
@@ -293,8 +300,7 @@ body {
 .date-column { width: 120px; }
 .actions-column { width: 150px; }
 
-/* Total width: 50+80+300+120+100+150+120+150 = 1070px */
-
+/* Badges */
 .status-badge {
     padding: 0.25rem 0.5rem;
     border-radius: 10px;
@@ -329,6 +335,7 @@ body {
 .priority-high { background: #f8d7da; color: #721c24; }
 .priority-urgent { background: #dc3545; color: white; }
 
+/* Buttons */
 .btn {
     padding: 0.3rem 0.6rem;
     border: none;
@@ -372,6 +379,17 @@ body {
     background: #f8f9fa;
 }
 
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+/* Loading and Empty States */
 .loading-state, .empty-state {
     text-align: center;
     padding: 2rem;
@@ -394,10 +412,7 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-.hidden {
-    display: none;
-}
-
+/* Pagination */
 .pagination-container {
     display: flex;
     justify-content: space-between;
@@ -460,56 +475,6 @@ body {
     border-color: #3498db;
 }
 
-@media (max-width: 1024px) {
-    .content-wrapper {
-        flex-direction: column;
-    }
-    
-    .checklist-sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #e1e5e9;
-        max-height: 200px;
-    }
-    
-    .table-wrapper {
-        max-height: 350px;
-    }
-    
-    .tickets-table tbody {
-        max-height: 300px;
-    }
-}
-
-.tickets-table tbody::-webkit-scrollbar {
-    width: 6px;
-}
-
-.tickets-table tbody::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.tickets-table tbody::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-.tickets-table tbody::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-.checklist-sidebar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.checklist-sidebar::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.checklist-sidebar::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
 /* Modal Styles */
 .modal {
     display: none;
@@ -556,6 +521,46 @@ body {
     background: #f8f9fa;
     border-top: 1px solid #e1e5e9;
     text-align: right;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group label.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* NEW: Read-only description style */
+.readonly-description {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    min-height: 80px;
+    color: #6c757d;
+    font-style: italic;
 }
 
 /* Ticket Details Styles */
@@ -607,56 +612,46 @@ body {
     color: #1976d2;
 }
 
-/* Danger button style */
-.btn-danger {
-    background: #dc3545;
-    color: white;
-    border: none;
+/* Scrollbar Styling */
+.tickets-table tbody::-webkit-scrollbar,
+.checklist-sidebar::-webkit-scrollbar {
+    width: 6px;
 }
 
-.btn-danger:hover {
-    background: #c82333;
+.tickets-table tbody::-webkit-scrollbar-track,
+.checklist-sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
 }
 
-/* Form Styles for Modals */
-.form-group {
-    margin-bottom: 1rem;
+.tickets-table tbody::-webkit-scrollbar-thumb,
+.checklist-sidebar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+.tickets-table tbody::-webkit-scrollbar-thumb:hover,
+.checklist-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
-.form-input, .form-textarea, .form-select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #e1e5e9;
-    border-radius: 4px;
-    font-size: 0.9rem;
-}
-
-.form-textarea {
-    height: 100px;
-    resize: vertical;
-}
-
-.required::after {
-    content: " *";
-    color: #dc3545;
-}
-
-.bulk-delete-confirm {
-    background: #f8d7da;
-    border: 1px solid #f5c6cb;
-    border-radius: 4px;
-    padding: 1rem;
-    margin-top: 1rem;
-    color: #721c24;
-}
-
-.bulk-delete-confirm p {
-    margin: 0;
-    font-weight: 500;
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .content-wrapper {
+        flex-direction: column;
+    }
+    
+    .checklist-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e1e5e9;
+        max-height: 200px;
+    }
+    
+    .table-wrapper {
+        max-height: 350px;
+    }
+    
+    .tickets-table tbody {
+        max-height: 300px;
+    }
 }

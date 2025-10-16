@@ -16,11 +16,9 @@ public class TicketController {
     @Autowired
     private TicketService ticketService;
 
-    // KEEP THIS JSON VERSION - Remove the @RequestParam version
     @PostMapping
     public ResponseEntity<String> createTicket(@RequestBody TicketRegistrationRequest request) {
         try {
-            // Use the createTicket method that sends emails
             Ticket createdTicket = ticketService.createTicket(
                 request.getFullName(),
                 request.getSubject(),

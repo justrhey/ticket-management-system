@@ -21,13 +21,21 @@ public class WebController {
         return "forward:/index.html";
     }
     
-    @GetMapping("/dashboard")
-    public String dashboard(HttpSession session) {
+    @GetMapping("/ticket")
+    public String ticket(HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
         }
         return "forward:/ticket.html";
-    } // <- Missing closing brace was here
+    }
+
+    @GetMapping("/dashboard")
+    public String  dashboard(HttpSession session){
+        if(session.getAttribute("user") == null){
+            return "redirect:/login";
+        }
+        return "forward:/dashboard.html";
+    }
     
     @GetMapping("/login")
     public String loginPage() {
@@ -48,7 +56,7 @@ public class WebController {
                     User user = userOpt.get();
                     session.setAttribute("user", user.getEmail());
                     session.setAttribute("authenticated", true);
-                    return "redirect:/dashboard";
+                    return "redirect:/ticket";
                 }
             }
             
