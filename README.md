@@ -232,6 +232,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - PostgreSQL community for robust database solutions
 - All contributors who helped improve this system
 - Virspacio Co Working Space IT dept for proposing the system
+- A reference that i used when i created user-registration-service
 
 ---
 
