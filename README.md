@@ -64,34 +64,6 @@ flowchart TD
     B <--> E
 ```
 
-## 📁 Project Structure
-
-```
-ticket-management-system/
-├── 📂 backend/
-│   ├── 📂 src/main/java/com/virspacio/tickets/
-│   │   ├── 🏷️ Ticket.java                 # Entity model
-│   │   ├── 🎯 TicketController.java       # REST endpoints
-│   │   ├── 🔧 TicketService.java          # Business logic
-│   │   └── 📊 TicketRepository.java       # Data access
-│   ├── 📄 application.properties          # DB configuration
-│   └── 📄 pom.xml                         # Maven dependencies
-│
-├── 📂 frontend/
-│   ├── 📄 index.html                      # Main application
-│   ├── 📂 css/
-│   │   ├── 🎨 table-style.css             # Table styling
-│   │   └── 🎨 modal-styles.css            # Modal components
-│   ├── 📂 js/
-│   │   ├── ⚡ table-manager.js            # Core functionality
-│   │   └── 🔧 app.js                     # Utility functions
-│   └── 📂 resources/
-│       └── 🖼️ success.webp                # Success meme image
-│
-├── 📄 README.md                           # This file
-└── 📄 .gitignore                         # Git exclusion rules
-```
-
 ## 🛠️ Technology Stack
 
 ### Backend
@@ -145,31 +117,6 @@ ticket-management-system/
 - Maven 3.6+
 - PostgreSQL 15+
 - Modern web browser
-
-### Backend Setup
-```bash
-# Navigate to backend directory
-cd backend
-
-# Configure database in application.properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/ticketdb
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-
-# Run the application
-mvn spring-boot:run
-```
-
-### Frontend Setup
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Serve the application (any static server)
-python -m http.server 8000
-# or
-npx serve .
-```
 
 ### Access the Application
 - Frontend: `http://localhost:8000`
@@ -279,25 +226,12 @@ git push origin feature/amazing-feature
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🐛 Bug Reports
-
-Found a bug? Please [open an issue](https://github.com/justrhey/ticket-management-system/issues) with:
-- Detailed description
-- Steps to reproduce
-- Expected vs actual behavior
-- Screenshots if applicable
-
-## 📞 Support
-
-- **Documentation**: [GitHub Wiki](https://github.com/justrhey/ticket-management-system/wiki)
-- **Issues**: [GitHub Issues](https://github.com/justrhey/ticket-management-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/justrhey/ticket-management-system/discussions)
-
 ## 🏆 Acknowledgments
 
 - Spring Boot team for the excellent framework
 - PostgreSQL community for robust database solutions
 - All contributors who helped improve this system
+- Virspacio Co Working Space IT dept for proposing the system
 
 ---
 
