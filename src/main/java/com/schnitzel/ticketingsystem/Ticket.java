@@ -18,12 +18,14 @@ public class Ticket{
     private String ticketStatus; //status if already done ex. pending, done, in prog
     private String subject; // title of the concern
     private LocalDateTime requestedTime; // Date stamp
+    @Column(name = "intent", length = 2000)
     private String intent; //Purpose of the ticket
     private String assignedPerson; //Optional if employee neee specific people
     private String priority;
     private String clientIpAddress;
     private String computerName;
     private String userAgent;
+    private String itComment;
 
     //Default constructor wag tanngalin
     public Ticket(){
@@ -31,7 +33,7 @@ public class Ticket{
 
     public Ticket(String fullName, String ticketStatus, String subject, 
                  LocalDateTime requestedTime, String intent, String assignedPerson, String priority,
-                 String clientIpAddress, String computerName, String userAgent) {
+                 String clientIpAddress, String computerName, String userAgent, String itComment) {
         this.fullName = fullName;
         this.ticketStatus = ticketStatus;
         this.subject = subject;
@@ -42,11 +44,16 @@ public class Ticket{
         this.clientIpAddress = clientIpAddress;
         this.computerName = computerName;
         this.userAgent = userAgent;
+        this.itComment = itComment;
     }
 
     //Getters
     public Long getTicketId(){
         return this.ticketId;
+    }
+
+    public String getItComment(){
+        return itComment;
     }
 
     public String getClientIpAddress(){
@@ -95,6 +102,10 @@ public class Ticket{
         this.clientIpAddress = clientIpAddress;
     }
 
+    public void setItComment(String itComment){
+        this.itComment = itComment;
+    }
+    
     public void setComputerName(String computerName){
         this.computerName = computerName;
     }

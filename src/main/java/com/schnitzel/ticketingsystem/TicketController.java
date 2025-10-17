@@ -27,7 +27,8 @@ public class TicketController {
                 request.getPriority(),
                 request.getClientIpAddress(),
                 request.getComputerName(),
-                request.getUserAgent()
+                request.getUserAgent(),
+                request.getItComment()
             );
             
             return ResponseEntity.status(HttpStatus.CREATED).body("Ticket created successfully");
@@ -62,7 +63,8 @@ public class TicketController {
             request.getPriority(),  
             request.getClientIpAddress(),
             request.getComputerName(),
-            request.getUserAgent()
+            request.getUserAgent(),
+            request.getItComment()
         );
         
         return updated ? 

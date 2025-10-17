@@ -21,6 +21,7 @@ public class TicketRegistrationRequest {
     private String clientIpAddress;
     private String computerName;
     private String userAgent;
+    private String itComment;
 
     public TicketRegistrationRequest() {
     }
@@ -28,7 +29,7 @@ public class TicketRegistrationRequest {
     public TicketRegistrationRequest(Long ticketId, String fullName, String ticketStatus, 
                                     String subject, LocalDateTime requestedTime,
                                     String intent, String assignedPerson, String priority,
-                                    String clientIpAddress, String computerName, String userAgent) {
+                                    String clientIpAddress, String computerName, String userAgent, String itComment) {
         this.ticketId = ticketId;
         this.fullName = fullName;
         this.ticketStatus = ticketStatus;
@@ -40,6 +41,7 @@ public class TicketRegistrationRequest {
         this.clientIpAddress = clientIpAddress;
         this.computerName = computerName;
         this.userAgent = userAgent;
+        this.itComment = itComment;
     }
 
     public Long getTicketId() {
@@ -56,6 +58,10 @@ public class TicketRegistrationRequest {
 
     public String getUserAgent(){
         return userAgent;
+    }
+
+    public String getItComment(){
+        return itComment;
     }
 
 
@@ -130,5 +136,9 @@ public class TicketRegistrationRequest {
 
     public void setAssignedPerson(String assignedPerson) {
         this.assignedPerson = assignedPerson;
+    }
+
+    public void setItComment(String itComment){
+        this.itComment = itComment;
     }
 }

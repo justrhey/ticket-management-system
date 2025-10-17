@@ -90,30 +90,29 @@
 
                         <div class="form-group">
                             <label>Assigned To</label>
-                             <div class="form-group">
-                            <label>Assigned To</label>
-                            <select class="form-select" id="assignedPerson" required>
-                            <option value="">Select Priority</option>
-                            <option value="ITdept">IT Network and System Engineer</option>
-                        </div>                    
+                            <select class="form-select" id="assignedPerson">
+                                <option value="">Select Assignee</option>
+                                <option value="ITdept">IT Network and System Engineer</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <!-- Add this inside the create modal form, after the Contact Information section -->
-                <div class="form-section">
-                    <h3 class="form-section-title">System Information</h3>
-                    <div class="form-group">
-                        <label>Network Detection</label>
-                        <div id="network-info-label">
-                            <!-- Network info will be displayed here -->
-                            <div style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; border: 1px solid #e9ecef; font-size: 0.9em;">
-                                <strong>📡 Network Info:</strong> Detecting your IP and computer name...
+                    <!-- System Information Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">System Information</h3>
+                        <div class="form-group">
+                            <label>Network Detection</label>
+                            <div id="network-info-label">
+                                <!-- Network info will be displayed here -->
+                                <div style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; border: 1px solid #e9ecef; font-size: 0.9em;">
+                                    <strong> Network Info:</strong> Detecting your IP and computer name...
+                                </div>
                             </div>
+                            <small style="color: #666; display: block; margin-top: 4px;">
+                                This information helps us identify and prevent spam submissions.
+                            </small>
                         </div>
-                        <small style="color: #666; display: block; margin-top: 4px;">
-                            This information helps us identify and prevent spam submissions.
-                        </small>
                     </div>
-                </div>
 
                     <!-- Description Section -->
                     <div class="form-section">
@@ -140,20 +139,20 @@
         </div>
     </div>
 
-<div id="successModal" class="modal">
-    <div class="modal-content" style="max-width: 400px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-        <div class="modal-header" style="background: #28a745; padding: 1rem; color: white;">
-            <h2 style="margin: 0;">Success!</h2>
-        </div>
-        <div class="modal-body">
-            <div style="text-align: center; padding: 1rem;">
-                <!-- Your custom meme image -->
-                <img src="./image/success.webp" alt="Success Meme" style="width: 100%; max-width: 300px; height: auto; margin-bottom: 1rem; border-radius: 4px;">
-                <p id="success-message" style="font-size: 1.1rem; color: #333;">Ticket created successfully!</p>
+    <div id="successModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div class="modal-header" style="background: #28a745; padding: 1rem; color: white;">
+                <h2 style="margin: 0;">Success!</h2>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; padding: 1rem;">
+                    <!-- Your custom meme image -->
+                    <img src="./image/success.webp" alt="Success Meme" style="width: 100%; max-width: 300px; height: auto; margin-bottom: 1rem; border-radius: 4px;">
+                    <p id="success-message" style="font-size: 1.1rem; color: #333;">Ticket created successfully!</p>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <script src="/js/app.js"></script>
 </body>

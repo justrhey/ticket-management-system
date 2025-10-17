@@ -15,11 +15,12 @@ public class TicketResponse{
     private String clientIpAddress;
     private String computerName;
     private String userAgent;
+    private String itComment;
 
     public TicketResponse(Long ticketId, String fullName, 
     String ticketStatus, String subject, LocalDateTime requestedTime,
     String intent, String assignedPerson, String priority,
-    String clientIpAddress, String computerName, String userAgent){
+    String clientIpAddress, String computerName, String userAgent, String itComment){
         this.ticketId = ticketId;
         this.fullName = fullName;
         this.ticketStatus = ticketStatus;
@@ -31,6 +32,7 @@ public class TicketResponse{
         this.clientIpAddress = clientIpAddress;
         this.computerName = computerName;
         this.userAgent = userAgent;
+        this.itComment = itComment;
     }
 
     public Long getTicketId(){
@@ -68,5 +70,8 @@ public class TicketResponse{
     }
     public String getAssignedPerson(){
         return assignedPerson;
+    }
+    public String getItComment(){
+        return itComment;
     }
 }

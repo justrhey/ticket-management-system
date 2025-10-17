@@ -25,7 +25,7 @@ public class TicketService {
 
     public boolean updateTicket(Long ticketId, String fullName, String ticketStatus, String subject, 
                  LocalDateTime requestedTime, String intent, String assignedPerson, String priority,
-                 String clientIpAddress, String computerName, String userAgent){
+                 String clientIpAddress, String computerName, String userAgent, String itComment){
         Optional<Ticket> existingTicket = ticketRepository.findById(ticketId); 
         if(existingTicket.isPresent()){
             Ticket ticket = existingTicket.get();
@@ -61,6 +61,9 @@ public class TicketService {
             if(userAgent != null){
                 ticket.setUserAgent(userAgent.trim());
             }
+            if(itComment != null){
+                ticket.setItComment(itComment.trim());
+            }
             
             ticketRepository.save(ticket);
             return true;
@@ -70,7 +73,7 @@ public class TicketService {
 
     public boolean registerTicket(String fullName, String ticketStatus, String subject, 
                  LocalDateTime requestedTime, String intent, String assignedPerson, String priority,
-                 String clientIpAddress, String computerName, String userAgent){
+                 String clientIpAddress, String computerName, String userAgent, String itComment){
         
         // Validate input
         if(!validator.isValidFullName(fullName)){
@@ -81,7 +84,7 @@ public class TicketService {
         }
 
         // Create new ticket
-        Ticket newTicket = new Ticket(fullName, ticketStatus, subject, requestedTime, intent, assignedPerson, priority, clientIpAddress, computerName, userAgent);
+        Ticket newTicket = new Ticket(fullName, ticketStatus, subject, requestedTime, intent, assignedPerson, priority, clientIpAddress, computerName, userAgent, itComment);
         ticketRepository.save(newTicket);
         return true;
     }
@@ -111,7 +114,7 @@ public class TicketService {
     }
 
 public Ticket createTicket(String fullName, String subject, String description, String assignedPerson, String priority, String clientIpAddress,
-String computerName, String userAgent) {
+String computerName, String userAgent, String itComment) {
     Ticket newTicket = new Ticket();
     newTicket.setFullName(fullName);
     newTicket.setSubject(subject);
@@ -123,6 +126,7 @@ String computerName, String userAgent) {
     newTicket.setClientIpAddress(clientIpAddress);
     newTicket.setComputerName(computerName);
     newTicket.setUserAgent(userAgent);
+    newTicket.setItComment(itComment);
 
     Ticket savedTicket = ticketRepository.save(newTicket);
     

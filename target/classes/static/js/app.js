@@ -1,4 +1,5 @@
-const API_BASE = 'http://localhost:8080/api/tickets';
+// Use relative path or dynamic origin instead of hardcoded localhost
+const API_BASE = '/api/tickets';
 let allTickets = [];
 let selectedSubject = '';
 

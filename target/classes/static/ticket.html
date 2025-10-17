@@ -105,6 +105,23 @@
                             <option value="100">100 per page</option>
                         </select>
                     </div>
+
+                    <div class="control-group">
+                        <label class="auto-refresh-toggle">
+                            <input type="checkbox" id="auto-refresh-toggle" checked>
+                            <span class="toggle-slider"></span>
+                            Live Updates
+                        </label>
+                        <span id="refresh-indicator" class="refresh-indicator">🟢 Live</span>
+                        <span class="refresh-interval">(Every 5s)</span>
+                    </div>
+
+                    <!-- Test Button -->
+                    <div style="margin-left: 10px;">
+                        <button class="btn btn-small" onclick="testModals()" style="background: #ff6b6b;">
+                            Test Modals
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Tickets Table -->
@@ -172,12 +189,12 @@
         </div>
     </div>
 
-    <!-- Action Modals -->
     <!-- Edit Ticket Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Edit Ticket</h2>
+                <span class="close" onclick="closeEditModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <form id="editForm">
@@ -185,6 +202,7 @@
                         <label class="required">Subject</label>
                         <input type="text" class="form-input" id="edit-subject" required>
                     </div>
+                    
                     <div class="form-group">
                         <label class="required">Status</label>
                         <select class="form-select" id="edit-status" required>
@@ -194,6 +212,7 @@
                             <option value="CLOSED">Closed</option>
                         </select>
                     </div>
+                    
                     <div class="form-group">
                         <label class="required">Priority</label>
                         <select class="form-select" id="edit-priority" required>
@@ -203,15 +222,45 @@
                             <option value="URGENT">Urgent</option>
                         </select>
                     </div>
+                    
                     <div class="form-group">
-                        <label>Assigned To</label>
-                        <input type="text" class="form-input" id="edit-assignedPerson">
+                        <label class="required">Assigned To</label>
+                        <select class="form-select" id="edit-assignedPerson" required>
+                            <option value="">Select IT Staff</option>
+                            <option value="IT Network and System Engineer">IT Network and System Engineer</option>
+                            <option value="IT Support Specialist">IT Support Specialist</option>
+                            <option value="IT Administrator">IT Administrator</option>
+                            <option value="IT Manager">IT Manager</option>
+                            <option value="System Analyst">System Analyst</option>
+                            <option value="Database Administrator">Database Administrator</option>
+                            <option value="Security Specialist">Security Specialist</option>
+                        </select>
                     </div>
+                    
+                    <!-- Original Description (Read-only) -->
                     <div class="form-group">
-                        <label>Description</label>
-                        <textarea class="form-textarea" id="edit-intent"></textarea>
+                        <label>Original Description</label>
+                        <div class="readonly-description" id="edit-original-description" style="
+                            background: #f8f9fa;
+                            padding: 12px;
+                            border-radius: 4px;
+                            border: 1px solid #e9ecef;
+                            min-height: 80px;
+                            max-height: 150px;
+                            overflow-y: auto;
+                            font-size: 0.9em;
+                            color: #495057;
+                        "></div>
                     </div>
-                    <input type="hidden" id="edit-ticketId">
+                    
+                    <!-- IT Comments Section -->
+                    <div class="form-group">
+                        <label>IT Comments & Updates</label>
+                        <textarea class="form-textarea" id="edit-it-comment" placeholder="Add IT comments, updates, or resolution details here..." style="min-height: 100px;"></textarea>
+                        <small style="color: #666; display: block; margin-top: 4px;">
+                            This field is for IT staff comments only. The original description cannot be modified.
+                        </small>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -226,6 +275,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Ticket Details</h2>
+                <span class="close" onclick="closeViewModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="ticket-details">
@@ -257,6 +307,7 @@
                         <label>Created:</label>
                         <span id="view-created"></span>
                     </div>
+                    
                     <!-- Network Information Section -->
                     <div class="detail-row full-width">
                         <label>Network Information:</label>
@@ -275,9 +326,17 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Original Description -->
                     <div class="detail-row full-width">
-                        <label>Description:</label>
+                        <label>Original Description:</label>
                         <div id="view-description" class="description-content"></div>
+                    </div>
+                    
+                    <!-- IT Comments Section -->
+                    <div class="detail-row full-width">
+                        <label>IT Comments & Updates:</label>
+                        <div id="view-it-comment" class="description-content"></div>
                     </div>
                 </div>
             </div>
@@ -292,6 +351,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Bulk Actions</h2>
+                <span class="close" onclick="closeBulkModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -305,10 +365,21 @@
                         <option value="delete">Delete Tickets</option>
                     </select>
                 </div>
+                
                 <div class="form-group" id="bulk-assign-field" style="display: none;">
                     <label>Assign To</label>
-                    <input type="text" class="form-input" id="bulk-assignee" placeholder="Enter assignee name">
+                    <select class="form-select" id="bulk-assignee">
+                        <option value="">Select IT Staff</option>
+                        <option value="IT Network and System Engineer">IT Network and System Engineer</option>
+                        <option value="IT Support Specialist">IT Support Specialist</option>
+                        <option value="IT Administrator">IT Administrator</option>
+                        <option value="IT Manager">IT Manager</option>
+                        <option value="System Analyst">System Analyst</option>
+                        <option value="Database Administrator">Database Administrator</option>
+                        <option value="Security Specialist">Security Specialist</option>
+                    </select>
                 </div>
+                
                 <div class="form-group" id="bulk-status-field" style="display: none;">
                     <label>New Status</label>
                     <select class="form-select" id="bulk-status">
@@ -318,6 +389,7 @@
                         <option value="CLOSED">Closed</option>
                     </select>
                 </div>
+                
                 <div class="form-group" id="bulk-priority-field" style="display: none;">
                     <label>New Priority</label>
                     <select class="form-select" id="bulk-priority">
@@ -327,6 +399,7 @@
                         <option value="URGENT">Urgent</option>
                     </select>
                 </div>
+                
                 <div class="selected-info">
                     <p>This action will affect <strong id="bulk-count">0</strong> selected tickets.</p>
                 </div>
@@ -343,14 +416,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Confirm Delete</h2>
+                <span class="close" onclick="closeDeleteModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete this ticket?</p>
-                <p><strong>This action cannot be undone.</strong></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="confirmDelete()">Delete Ticket</button>
+                <p id="delete-confirm-message">Are you sure you want to delete this ticket? This action cannot be undone.</p>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                    <button class="btn btn-danger" onclick="confirmDelete()">Delete Ticket</button>
+                </div>
             </div>
         </div>
     </div>
@@ -360,6 +433,7 @@
         <div class="modal-content" style="max-width: 400px;">
             <div class="modal-header" id="notification-header">
                 <h2 id="notification-title">Notification</h2>
+                <span class="close" onclick="closeNotificationModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <p id="notification-message"></p>
