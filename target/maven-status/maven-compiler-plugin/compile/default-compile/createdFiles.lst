@@ -4,6 +4,7 @@ com/schnitzel/ticketingsystem/dto/TicketRegistrationRequest.class
 com/schnitzel/ticketingsystem/userauth/UserRepository.class
 com/schnitzel/ticketingsystem/TicketController.class
 com/schnitzel/ticketingsystem/TicketRepository.class
+com/schnitzel/ticketingsystem/security/NetworkUtils.class
 com/schnitzel/ticketingsystem/TicketService.class
 com/schnitzel/ticketingsystem/security/Admin.class
 com/schnitzel/ticketingsystem/TicketValidatorService.class

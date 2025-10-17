@@ -8,12 +8,10 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header with Dashboard button -->
+        <!-- Header -->
         <header class="app-header">
             <h1>Virspacio Ticket Management</h1>
             <div class="header-actions">
-                <!-- ADDED: Dashboard navigation button -->
-                <a href="/dashboard" class="btn btn-outline">Dashboard</a>
                 <button class="btn btn-primary" onclick="refreshTable()">Refresh</button>
                 <button class="btn btn-success" onclick="bulkAction()">Bulk Action</button>
             </div>
@@ -207,25 +205,11 @@
                     </div>
                     <div class="form-group">
                         <label>Assigned To</label>
-                        <!-- CHANGED: Input to dropdown with IT department options -->
-                        <select class="form-select" id="edit-assignedPerson">
-                            <option value="">Unassigned</option>
-                            <option value="IT Support Team">IT Support Team</option>
-                            <option value="Network Admin">Network Admin</option>
-                            <option value="System Admin">System Admin</option>
-                            <option value="Help Desk">Help Desk</option>
-                            <option value="IT Manager">IT Manager</option>
-                        </select>
+                        <input type="text" class="form-input" id="edit-assignedPerson">
                     </div>
                     <div class="form-group">
-                        <label>IT Comments</label>
-                        <!-- CHANGED: Description field to IT Comments (editable) -->
-                        <textarea class="form-textarea" id="edit-itComments" placeholder="Add IT comments or updates here..."></textarea>
-                    </div>
-                    <!-- ADDED: Display original description as read-only -->
-                    <div class="form-group">
-                        <label>Original Description (Read Only)</label>
-                        <div class="readonly-description" id="edit-originalDescription"></div>
+                        <label>Description</label>
+                        <textarea class="form-textarea" id="edit-intent"></textarea>
                     </div>
                     <input type="hidden" id="edit-ticketId">
                 </form>
@@ -273,14 +257,27 @@
                         <label>Created:</label>
                         <span id="view-created"></span>
                     </div>
+                    <!-- Network Information Section -->
                     <div class="detail-row full-width">
-                        <label>Original Description:</label>
-                        <div id="view-description" class="description-content"></div>
+                        <label>Network Information:</label>
+                        <div class="network-info-section">
+                            <div class="network-info-item">
+                                <span class="network-info-label">IP Address:</span>
+                                <span id="view-ip">Unknown</span>
+                            </div>
+                            <div class="network-info-item">
+                                <span class="network-info-label">Computer Name:</span>
+                                <span id="view-computer">Unknown</span>
+                            </div>
+                            <div class="network-info-item">
+                                <span class="network-info-label">User Agent:</span>
+                                <span id="view-useragent">Unknown</span>
+                            </div>
+                        </div>
                     </div>
-                    <!-- ADDED: IT Comments section in view modal -->
                     <div class="detail-row full-width">
-                        <label>IT Comments:</label>
-                        <div id="view-itComments" class="description-content"></div>
+                        <label>Description:</label>
+                        <div id="view-description" class="description-content"></div>
                     </div>
                 </div>
             </div>
@@ -310,15 +307,7 @@
                 </div>
                 <div class="form-group" id="bulk-assign-field" style="display: none;">
                     <label>Assign To</label>
-                    <!-- CHANGED: Input to dropdown for bulk assign -->
-                    <select class="form-select" id="bulk-assignee">
-                        <option value="">Unassigned</option>
-                        <option value="IT Support Team">IT Support Team</option>
-                        <option value="Network Admin">Network Admin</option>
-                        <option value="System Admin">System Admin</option>
-                        <option value="Help Desk">Help Desk</option>
-                        <option value="IT Manager">IT Manager</option>
-                    </select>
+                    <input type="text" class="form-input" id="bulk-assignee" placeholder="Enter assignee name">
                 </div>
                 <div class="form-group" id="bulk-status-field" style="display: none;">
                     <label>New Status</label>

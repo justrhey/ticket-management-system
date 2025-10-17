@@ -24,7 +24,10 @@ public class TicketController {
                 request.getSubject(),
                 request.getIntent(), // This is the description
                 request.getAssignedPerson(),
-                request.getPriority()
+                request.getPriority(),
+                request.getClientIpAddress(),
+                request.getComputerName(),
+                request.getUserAgent()
             );
             
             return ResponseEntity.status(HttpStatus.CREATED).body("Ticket created successfully");
@@ -56,7 +59,10 @@ public class TicketController {
             request.getRequestedTime(),
             request.getIntent(),
             request.getAssignedPerson(),
-            request.getPriority()
+            request.getPriority(),  
+            request.getClientIpAddress(),
+            request.getComputerName(),
+            request.getUserAgent()
         );
         
         return updated ? 
@@ -77,6 +83,4 @@ public class TicketController {
         List<Ticket> tickets = ticketService.searchTickets(query);
         return ResponseEntity.ok(tickets);
     }
-    
-  
 }

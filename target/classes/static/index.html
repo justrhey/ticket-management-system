@@ -90,9 +90,30 @@
 
                         <div class="form-group">
                             <label>Assigned To</label>
-                            <input type="text" class="form-input" id="assignedPerson" placeholder="Optional - assign to team member">
-                        </div>
+                             <div class="form-group">
+                            <label>Assigned To</label>
+                            <select class="form-select" id="assignedPerson" required>
+                            <option value="">Select Priority</option>
+                            <option value="ITdept">IT Network and System Engineer</option>
+                        </div>                    
                     </div>
+
+                    <!-- Add this inside the create modal form, after the Contact Information section -->
+                <div class="form-section">
+                    <h3 class="form-section-title">System Information</h3>
+                    <div class="form-group">
+                        <label>Network Detection</label>
+                        <div id="network-info-label">
+                            <!-- Network info will be displayed here -->
+                            <div style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; border: 1px solid #e9ecef; font-size: 0.9em;">
+                                <strong>📡 Network Info:</strong> Detecting your IP and computer name...
+                            </div>
+                        </div>
+                        <small style="color: #666; display: block; margin-top: 4px;">
+                            This information helps us identify and prevent spam submissions.
+                        </small>
+                    </div>
+                </div>
 
                     <!-- Description Section -->
                     <div class="form-section">

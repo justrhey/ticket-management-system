@@ -6,7 +6,7 @@ let totalPages = 1;
 let totalItems = 0;
 let selectedTickets = new Set();
 let currentFilters = {
-    status: [], // Start with no filters selected
+    status: [],
     search: '',
     sort: 'createdAt,desc'
 };
@@ -16,26 +16,68 @@ let currentTicketId = null;
 
 // Load tickets when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded - initializing...');
+    console.log('DOM loaded - initializing table manager...');
+    initializeNetworkInfo();
     loadTickets();
     initializeEventListeners();
 });
 
+// Initialize network information detection
+function initializeNetworkInfo() {
+    console.log('Initializing network info...');
+    
+    // Get IP address using a free API
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            localStorage.setItem('clientIpAddress', data.ip);
+            console.log('IP Address detected:', data.ip);
+        })
+        .catch(error => {
+            console.error('Error fetching IP address:', error);
+            localStorage.setItem('clientIpAddress', 'Unknown');
+        });
+
+    // Get computer name (hostname)
+    const computerName = window.location.hostname || 'Unknown';
+    localStorage.setItem('computerName', computerName);
+    console.log('Computer name detected:', computerName);
+}
+
+// Get network information
+function getNetworkInfo() {
+    return {
+        clientIpAddress: localStorage.getItem('clientIpAddress') || 'Unknown',
+        computerName: localStorage.getItem('computerName') || 'Unknown',
+        userAgent: navigator.userAgent || 'Unknown'
+    };
+}
+
 function initializeEventListeners() {
     // Enter key for search
-    document.getElementById('search-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            debouncedSearch();
-        }
-    });
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                debouncedSearch();
+            }
+        });
+    }
 
     // Bulk action field visibility
-    document.getElementById('bulk-action').addEventListener('change', function() {
-        const action = this.value;
-        document.getElementById('bulk-assign-field').style.display = action === 'assign' ? 'block' : 'none';
-        document.getElementById('bulk-status-field').style.display = action === 'change-status' ? 'block' : 'none';
-        document.getElementById('bulk-priority-field').style.display = action === 'change-priority' ? 'block' : 'none';
-    });
+    const bulkAction = document.getElementById('bulk-action');
+    if (bulkAction) {
+        bulkAction.addEventListener('change', function() {
+            const action = this.value;
+            const assignField = document.getElementById('bulk-assign-field');
+            const statusField = document.getElementById('bulk-status-field');
+            const priorityField = document.getElementById('bulk-priority-field');
+            
+            if (assignField) assignField.style.display = action === 'assign' ? 'block' : 'none';
+            if (statusField) statusField.style.display = action === 'change-status' ? 'block' : 'none';
+            if (priorityField) priorityField.style.display = action === 'change-priority' ? 'block' : 'none';
+        });
+    }
 }
 
 // API functions
@@ -49,10 +91,8 @@ async function loadTickets() {
         allTickets = await response.json();
         console.log('Loaded tickets:', allTickets.length);
         
-        // Debug ticket data
         if (allTickets.length > 0) {
             console.log('Sample ticket:', allTickets[0]);
-            console.log('All statuses:', [...new Set(allTickets.map(t => t.ticketStatus))]);
         }
         
         applyFiltersAndSort();
@@ -67,26 +107,15 @@ async function loadTickets() {
 function applyFiltersAndSort() {
     let filteredTickets = [...allTickets];
     
-    console.log('🔍 DEBUG: All tickets statuses:', allTickets.map(t => t.ticketStatus));
-    console.log('🔍 DEBUG: Current filters:', currentFilters.status);
-    
-    // Apply status filter - only if statuses are selected
+    // Apply status filter
     if (currentFilters.status.length > 0) {
         filteredTickets = filteredTickets.filter(ticket => {
             if (!ticket.ticketStatus) return false;
-            
-            // Normalize both ticket status and filter status for comparison
             const ticketStatus = normalizeStatus(ticket.ticketStatus);
             const filterStatuses = currentFilters.status.map(normalizeStatus);
-            
-            const matches = filterStatuses.includes(ticketStatus);
-            console.log(`🔍 DEBUG: Ticket ${ticket.ticketId} status "${ticket.ticketStatus}" (normalized: "${ticketStatus}") matches filter: ${matches}`);
-            
-            return matches;
+            return filterStatuses.includes(ticketStatus);
         });
     }
-    
-    console.log('🔍 DEBUG: Filtered tickets count:', filteredTickets.length);
     
     // Apply search filter
     if (currentFilters.search) {
@@ -96,7 +125,9 @@ function applyFiltersAndSort() {
             (ticket.fullName && ticket.fullName.toLowerCase().includes(query)) ||
             (ticket.intent && ticket.intent.toLowerCase().includes(query)) ||
             (ticket.assignedPerson && ticket.assignedPerson.toLowerCase().includes(query)) ||
-            (ticket.priority && ticket.priority.toLowerCase().includes(query))
+            (ticket.priority && ticket.priority.toLowerCase().includes(query)) ||
+            (ticket.clientIpAddress && ticket.clientIpAddress.toLowerCase().includes(query)) ||
+            (ticket.computerName && ticket.computerName.toLowerCase().includes(query))
         );
     }
     
@@ -115,16 +146,14 @@ function applyFiltersAndSort() {
     
     displayTickets(pageTickets);
     updatePagination();
-    updateStats(allTickets); // Use ALL tickets for accurate sidebar counts
+    updateStats(allTickets);
 }
 
-// Helper function to normalize status values
 function normalizeStatus(status) {
     if (!status) return '';
-    
     return status.toUpperCase()
-        .replace(/_/g, '')      // Remove underscores
-        .replace(/\s/g, '')     // Remove spaces
+        .replace(/_/g, '')
+        .replace(/\s/g, '')
         .trim();
 }
 
@@ -190,6 +219,10 @@ function displayTickets(tickets) {
             <td class="title-column">
                 <div class="ticket-title">${escapeHtml(ticket.subject || 'No subject')}</div>
                 <div class="ticket-description">${escapeHtml(ticket.intent || 'No description')}</div>
+                <div class="ticket-network-info">
+                    📡 IP: ${escapeHtml(ticket.clientIpAddress || 'Unknown')} | 
+                    Computer: ${escapeHtml(ticket.computerName || 'Unknown')}
+                </div>
             </td>
             <td class="status-column">
                 <span class="status-badge status-${status.toLowerCase()}">
@@ -409,9 +442,7 @@ function toggleSelectAll(checkbox) {
     }
 }
 
-// MODAL-BASED ACTIONS
-
-// Edit Ticket Modal
+// Edit Ticket Modal Functions
 function editTicket(ticketId) {
     console.log('Edit ticket clicked:', ticketId);
     const ticket = allTickets.find(t => t.ticketId === ticketId);
@@ -421,32 +452,52 @@ function editTicket(ticketId) {
     }
     
     currentTicketId = ticketId;
-    document.getElementById('edit-ticketId').value = ticketId;
-    document.getElementById('edit-subject').value = ticket.subject || '';
-    document.getElementById('edit-status').value = ticket.ticketStatus || 'OPEN';
-    document.getElementById('edit-priority').value = ticket.priority || 'MEDIUM';
-    document.getElementById('edit-assignedPerson').value = ticket.assignedPerson || '';
-    document.getElementById('edit-intent').value = ticket.intent || '';
+    
+    // Set form values
+    const subjectInput = document.getElementById('edit-subject');
+    const statusSelect = document.getElementById('edit-status');
+    const prioritySelect = document.getElementById('edit-priority');
+    const assignedInput = document.getElementById('edit-assignedPerson');
+    const intentTextarea = document.getElementById('edit-intent');
+    const ticketIdInput = document.getElementById('edit-ticketId');
+    
+    if (subjectInput) subjectInput.value = ticket.subject || '';
+    if (statusSelect) statusSelect.value = ticket.ticketStatus || 'OPEN';
+    if (prioritySelect) prioritySelect.value = ticket.priority || 'MEDIUM';
+    if (assignedInput) assignedInput.value = ticket.assignedPerson || '';
+    if (intentTextarea) intentTextarea.value = ticket.intent || '';
+    if (ticketIdInput) ticketIdInput.value = ticketId;
     
     openEditModal();
 }
 
 function openEditModal() {
-    document.getElementById('editModal').style.display = 'block';
+    const modal = document.getElementById('editModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
 }
 
 function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
-    document.getElementById('editForm').reset();
+    const modal = document.getElementById('editModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    const form = document.getElementById('editForm');
+    if (form) {
+        form.reset();
+    }
     currentTicketId = null;
 }
 
 async function saveTicketEdit() {
-    const subject = document.getElementById('edit-subject').value;
-    const status = document.getElementById('edit-status').value;
-    const priority = document.getElementById('edit-priority').value;
-    const assignedPerson = document.getElementById('edit-assignedPerson').value;
-    const intent = document.getElementById('edit-intent').value;
+    if (!currentTicketId) return;
+
+    const subject = document.getElementById('edit-subject')?.value;
+    const status = document.getElementById('edit-status')?.value;
+    const priority = document.getElementById('edit-priority')?.value;
+    const assignedPerson = document.getElementById('edit-assignedPerson')?.value;
+    const intent = document.getElementById('edit-intent')?.value;
 
     if (!subject) {
         showNotification('Error', 'Please fill in all required fields.', 'error');
@@ -482,67 +533,121 @@ async function saveTicketEdit() {
     }
 }
 
-// View Ticket Modal
+// View Ticket Modal Functions
 function viewTicket(ticketId) {
     console.log('View ticket clicked:', ticketId);
     const ticket = allTickets.find(t => t.ticketId === ticketId);
     if (!ticket) return;
 
-    document.getElementById('view-id').textContent = `#${ticket.ticketId}`;
-    document.getElementById('view-subject').textContent = ticket.subject || 'No subject';
-    document.getElementById('view-requester').textContent = ticket.fullName || 'Unknown';
-    document.getElementById('view-status').innerHTML = `<span class="status-badge status-${(ticket.ticketStatus || 'OPEN').toLowerCase()}">${ticket.ticketStatus || 'OPEN'}</span>`;
-    document.getElementById('view-priority').innerHTML = `<span class="priority-badge priority-${(ticket.priority || 'MEDIUM').toLowerCase()}">${ticket.priority || 'MEDIUM'}</span>`;
-    document.getElementById('view-assigned').textContent = ticket.assignedPerson || 'Not assigned';
-    document.getElementById('view-created').textContent = formatDateTime(ticket.requestedTime);
-    document.getElementById('view-description').textContent = ticket.intent || 'No description provided';
+    // Set view modal content
+    const viewId = document.getElementById('view-id');
+    const viewSubject = document.getElementById('view-subject');
+    const viewRequester = document.getElementById('view-requester');
+    const viewStatus = document.getElementById('view-status');
+    const viewPriority = document.getElementById('view-priority');
+    const viewAssigned = document.getElementById('view-assigned');
+    const viewCreated = document.getElementById('view-created');
+    const viewDescription = document.getElementById('view-description');
+    const viewIp = document.getElementById('view-ip');
+    const viewComputer = document.getElementById('view-computer');
+    const viewUseragent = document.getElementById('view-useragent');
+
+    if (viewId) viewId.textContent = `#${ticket.ticketId}`;
+    if (viewSubject) viewSubject.textContent = ticket.subject || 'No subject';
+    if (viewRequester) viewRequester.textContent = ticket.fullName || 'Unknown';
+    
+    if (viewStatus) {
+        const status = ticket.ticketStatus || 'OPEN';
+        viewStatus.innerHTML = `<span class="status-badge status-${status.toLowerCase()}">${status}</span>`;
+    }
+    
+    if (viewPriority) {
+        const priority = ticket.priority || 'MEDIUM';
+        viewPriority.innerHTML = `<span class="priority-badge priority-${priority.toLowerCase()}">${priority}</span>`;
+    }
+    
+    if (viewAssigned) viewAssigned.textContent = ticket.assignedPerson || 'Not assigned';
+    if (viewCreated) viewCreated.textContent = formatDateTime(ticket.requestedTime);
+    if (viewDescription) viewDescription.textContent = ticket.intent || 'No description provided';
+    
+    // Set network information
+    if (viewIp) viewIp.textContent = ticket.clientIpAddress || 'Unknown';
+    if (viewComputer) viewComputer.textContent = ticket.computerName || 'Unknown';
+    if (viewUseragent) viewUseragent.textContent = ticket.userAgent || 'Unknown';
 
     openViewModal();
 }
 
 function openViewModal() {
-    document.getElementById('viewModal').style.display = 'block';
+    const modal = document.getElementById('viewModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
 }
 
 function closeViewModal() {
-    document.getElementById('viewModal').style.display = 'none';
+    const modal = document.getElementById('viewModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
-// Bulk Actions Modal
+// Bulk Actions Modal Functions
 function bulkAction() {
     if (selectedTickets.size === 0) {
         showNotification('Error', 'Please select tickets first', 'error');
         return;
     }
     
-    document.getElementById('bulk-count').textContent = selectedTickets.size;
-    document.getElementById('bulk-action').value = '';
-    document.getElementById('bulk-assignee').value = '';
-    document.getElementById('bulk-status').value = 'OPEN';
-    document.getElementById('bulk-priority').value = 'MEDIUM';
-    document.getElementById('bulk-assign-field').style.display = 'none';
-    document.getElementById('bulk-status-field').style.display = 'none';
-    document.getElementById('bulk-priority-field').style.display = 'none';
+    const bulkCount = document.getElementById('bulk-count');
+    if (bulkCount) bulkCount.textContent = selectedTickets.size;
+    
+    const bulkAction = document.getElementById('bulk-action');
+    if (bulkAction) bulkAction.value = '';
+    
+    const bulkAssignee = document.getElementById('bulk-assignee');
+    if (bulkAssignee) bulkAssignee.value = '';
+    
+    const bulkStatus = document.getElementById('bulk-status');
+    if (bulkStatus) bulkStatus.value = 'OPEN';
+    
+    const bulkPriority = document.getElementById('bulk-priority');
+    if (bulkPriority) bulkPriority.value = 'MEDIUM';
+    
+    const assignField = document.getElementById('bulk-assign-field');
+    const statusField = document.getElementById('bulk-status-field');
+    const priorityField = document.getElementById('bulk-priority-field');
+    
+    if (assignField) assignField.style.display = 'none';
+    if (statusField) statusField.style.display = 'none';
+    if (priorityField) priorityField.style.display = 'none';
     
     openBulkModal();
 }
 
 function openBulkModal() {
-    document.getElementById('bulkModal').style.display = 'block';
+    const modal = document.getElementById('bulkModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
 }
 
 function closeBulkModal() {
-    document.getElementById('bulkModal').style.display = 'none';
+    const modal = document.getElementById('bulkModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
 async function executeBulkAction() {
-    const action = document.getElementById('bulk-action').value;
-    
-    if (!action) {
+    const bulkAction = document.getElementById('bulk-action');
+    if (!bulkAction || !bulkAction.value) {
         showNotification('Error', 'Please select an action', 'error');
         return;
     }
 
+    const action = bulkAction.value;
+    
     if (action === 'delete') {
         if (!confirm(`Are you sure you want to delete ${selectedTickets.size} tickets? This action cannot be undone.`)) {
             return;
@@ -554,7 +659,7 @@ async function executeBulkAction() {
         
         switch (action) {
             case 'assign':
-                const assignee = document.getElementById('bulk-assignee').value;
+                const assignee = document.getElementById('bulk-assignee')?.value;
                 if (!assignee) {
                     showNotification('Error', 'Please enter an assignee name', 'error');
                     return;
@@ -563,12 +668,12 @@ async function executeBulkAction() {
                 break;
                 
             case 'change-status':
-                const status = document.getElementById('bulk-status').value;
+                const status = document.getElementById('bulk-status')?.value;
                 await bulkChangeStatus(status);
                 break;
                 
             case 'change-priority':
-                const priority = document.getElementById('bulk-priority').value;
+                const priority = document.getElementById('bulk-priority')?.value;
                 await bulkChangePriority(priority);
                 break;
                 
@@ -589,59 +694,6 @@ async function executeBulkAction() {
         showNotification('Error', 'Bulk action failed: ' + error.message, 'error');
     } finally {
         hideLoading();
-    }
-}
-
-async function bulkDelete() {
-    const deletePromises = Array.from(selectedTickets).map(ticketId => 
-        fetch(`${API_BASE}/${ticketId}`, {
-            method: 'DELETE'
-        })
-    );
-    
-    const results = await Promise.allSettled(deletePromises);
-    const allSuccessful = results.every(result => result.status === 'fulfilled' && result.value.ok);
-    
-    if (!allSuccessful) {
-        throw new Error('Some tickets could not be deleted');
-    }
-    
-    clearSelection();
-}
-
-// Delete Confirmation Modal
-function deleteTicket(ticketId) {
-    console.log('Delete ticket clicked:', ticketId);
-    currentTicketId = ticketId;
-    openDeleteModal();
-}
-
-function openDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'block';
-}
-
-function closeDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'none';
-    currentTicketId = null;
-}
-
-async function confirmDelete() {
-    if (!currentTicketId) return;
-
-    try {
-        const response = await fetch(`${API_BASE}/${currentTicketId}`, {
-            method: 'DELETE'
-        });
-
-        if (response.ok) {
-            closeDeleteModal();
-            loadTickets();
-            showNotification('Success', 'Ticket deleted successfully', 'success');
-        } else {
-            showNotification('Error', 'Error deleting ticket', 'error');
-        }
-    } catch (error) {
-        showNotification('Error', 'Error deleting ticket: ' + error.message, 'error');
     }
 }
 
@@ -698,7 +750,66 @@ async function bulkChangePriority(priority) {
     clearSelection();
 }
 
-// Stats implementation - FIXED
+async function bulkDelete() {
+    const deletePromises = Array.from(selectedTickets).map(ticketId => 
+        fetch(`${API_BASE}/${ticketId}`, {
+            method: 'DELETE'
+        })
+    );
+    
+    const results = await Promise.allSettled(deletePromises);
+    const allSuccessful = results.every(result => result.status === 'fulfilled' && result.value.ok);
+    
+    if (!allSuccessful) {
+        throw new Error('Some tickets could not be deleted');
+    }
+    
+    clearSelection();
+}
+
+// Delete Confirmation Modal Functions
+function deleteTicket(ticketId) {
+    console.log('Delete ticket clicked:', ticketId);
+    currentTicketId = ticketId;
+    openDeleteModal();
+}
+
+function openDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    currentTicketId = null;
+}
+
+async function confirmDelete() {
+    if (!currentTicketId) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/${currentTicketId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            closeDeleteModal();
+            loadTickets();
+            showNotification('Success', 'Ticket deleted successfully', 'success');
+        } else {
+            showNotification('Error', 'Error deleting ticket', 'error');
+        }
+    } catch (error) {
+        showNotification('Error', 'Error deleting ticket: ' + error.message, 'error');
+    }
+}
+
+// Stats implementation
 function updateStats(tickets) {
     console.log('📊 DEBUG: Updating stats with tickets:', tickets.length);
     
@@ -889,4 +1000,4 @@ window.refreshTable = refreshTable;
 window.clearFilters = clearFilters;
 window.bulkAction = bulkAction;
 
-console.log('Ticket management system initialized');
+console.log('Table manager initialized with network detection');

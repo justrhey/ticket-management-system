@@ -6,7 +6,52 @@ let selectedSubject = '';
 document.addEventListener('DOMContentLoaded', function() {
     loadTickets();
     initializeEventListeners();
+    initializeNetworkInfo(); // Initialize network information
 });
+
+// Initialize network information detection
+function initializeNetworkInfo() {
+    // Get IP address using a free API
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            localStorage.setItem('clientIpAddress', data.ip);
+            console.log('IP Address detected:', data.ip);
+            updateNetworkInfoLabel(); // Update the label when IP is fetched
+        })
+        .catch(error => {
+            console.error('Error fetching IP address:', error);
+            localStorage.setItem('clientIpAddress', 'Unknown');
+            updateNetworkInfoLabel();
+        });
+
+    // Get computer name (hostname)
+    localStorage.setItem('computerName', window.location.hostname || 'Unknown');
+    updateNetworkInfoLabel();
+}
+
+// Update the network information label in the form
+function updateNetworkInfoLabel() {
+    const networkInfoLabel = document.getElementById('network-info-label');
+    if (networkInfoLabel) {
+        const ip = localStorage.getItem('clientIpAddress') || 'Unknown';
+        const computer = localStorage.getItem('computerName') || 'Unknown';
+        networkInfoLabel.innerHTML = `
+            <div style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; border: 1px solid #e9ecef; font-size: 0.9em;">
+                <strong>📡 Network Info:</strong> IP: ${escapeHtml(ip)} | Computer: ${escapeHtml(computer)}
+            </div>
+        `;
+    }
+}
+
+// Get network information for form submissions
+function getNetworkInfo() {
+    return {
+        clientIpAddress: localStorage.getItem('clientIpAddress') || 'Unknown',
+        computerName: localStorage.getItem('computerName') || 'Unknown',
+        userAgent: navigator.userAgent || 'Unknown'
+    };
+}
 
 function initializeEventListeners() {
     // Search functionality
@@ -23,6 +68,8 @@ function initializeEventListeners() {
 // Modal functions
 function openCreateModal() {
     document.getElementById('createModal').style.display = 'block';
+    // Ensure network info is updated when modal opens
+    updateNetworkInfoLabel();
 }
 
 function closeCreateModal() {
@@ -73,13 +120,21 @@ async function createTicketFromForm() {
         return;
     }
 
+    // Get network information
+    const networkInfo = getNetworkInfo();
+
     const ticketData = {
         fullName: fullName,
         subject: selectedSubject,
         intent: intent,
         priority: priority,
-        assignedPerson: assignedPerson || ''
+        assignedPerson: assignedPerson || '',
+        clientIpAddress: networkInfo.clientIpAddress,
+        computerName: networkInfo.computerName,
+        userAgent: networkInfo.userAgent
     };
+
+    console.log('Submitting ticket with network info:', ticketData);
 
     // Show loading state
     showCreateLoading();
@@ -237,7 +292,9 @@ async function searchTickets() {
                 (ticket.fullName && ticket.fullName.toLowerCase().includes(query.toLowerCase())) ||
                 (ticket.intent && ticket.intent.toLowerCase().includes(query.toLowerCase())) ||
                 (ticket.priority && ticket.priority.toLowerCase().includes(query.toLowerCase())) ||
-                (ticket.assignedPerson && ticket.assignedPerson.toLowerCase().includes(query.toLowerCase()))
+                (ticket.assignedPerson && ticket.assignedPerson.toLowerCase().includes(query.toLowerCase())) ||
+                (ticket.clientIpAddress && ticket.clientIpAddress.toLowerCase().includes(query.toLowerCase())) ||
+                (ticket.computerName && ticket.computerName.toLowerCase().includes(query.toLowerCase()))
             );
             displayTickets(filteredTickets);
         }
@@ -249,7 +306,9 @@ async function searchTickets() {
             (ticket.fullName && ticket.fullName.toLowerCase().includes(query.toLowerCase())) ||
             (ticket.intent && ticket.intent.toLowerCase().includes(query.toLowerCase())) ||
             (ticket.priority && ticket.priority.toLowerCase().includes(query.toLowerCase())) ||
-            (ticket.assignedPerson && ticket.assignedPerson.toLowerCase().includes(query.toLowerCase()))
+            (ticket.assignedPerson && ticket.assignedPerson.toLowerCase().includes(query.toLowerCase())) ||
+            (ticket.clientIpAddress && ticket.clientIpAddress.toLowerCase().includes(query.toLowerCase())) ||
+            (ticket.computerName && ticket.computerName.toLowerCase().includes(query.toLowerCase()))
         );
         displayTickets(filteredTickets);
     }
@@ -259,7 +318,14 @@ function viewTicketDetails(ticket) {
     const createdDate = ticket.requestedTime ? new Date(ticket.requestedTime).toLocaleString() : 'Unknown';
     const priority = ticket.priority || 'Not specified';
     
-    alert(`Ticket Details:\n\nID: #${ticket.ticketId}\nSubject: ${ticket.subject}\nRequester: ${ticket.fullName}\nStatus: ${ticket.ticketStatus}\nPriority: ${priority}\nDescription: ${ticket.intent}\nAssigned To: ${ticket.assignedPerson || 'Not assigned'}\nCreated: ${createdDate}`);
+    let details = `Ticket Details:\n\nID: #${ticket.ticketId}\nSubject: ${ticket.subject}\nRequester: ${ticket.fullName}\nStatus: ${ticket.ticketStatus}\nPriority: ${priority}\nDescription: ${ticket.intent}\nAssigned To: ${ticket.assignedPerson || 'Not assigned'}\nCreated: ${createdDate}`;
+    
+    // Add network information if available
+    if (ticket.clientIpAddress || ticket.computerName) {
+        details += `\n\nNetwork Information:\nIP: ${ticket.clientIpAddress || 'Unknown'}\nComputer: ${ticket.computerName || 'Unknown'}`;
+    }
+    
+    alert(details);
 }
 
 function formatDate(dateString) {

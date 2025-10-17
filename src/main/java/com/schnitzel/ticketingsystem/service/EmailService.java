@@ -12,7 +12,7 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
     
-    @Value("${it.company.email:it@visrspacio.com}")
+    @Value("${it.company.email:waytoogeeked69@gmail.com}")
     private String itCompanyEmail;
     
     public void sendNewTicketNotification(String requesterName, String subject, String description) {
@@ -22,15 +22,15 @@ public class EmailService {
             message.setSubject("🎫 New Support Ticket: " + subject);
             message.setText(
                 "A new support ticket has been created:\n\n" +
-                "👤 Requester: " + requesterName + "\n" +
-                "📋 Subject: " + subject + "\n" +
-                "📝 Description: " + description + "\n\n" +
-                "⏰ Created: " + java.time.LocalDateTime.now() + "\n\n" +
+                " Requester: " + requesterName + "\n" +
+                " Subject: " + subject + "\n" +
+                " Description: " + description + "\n\n" +
+                " Created: " + java.time.LocalDateTime.now() + "\n\n" +
                 "Please check the ticketing system to address this ticket."
             );
             
             mailSender.send(message);
-            System.out.println("✅ Email sent successfully to: " + itCompanyEmail);
+            System.out.println("Email sent successfully to: " + itCompanyEmail);
             
         } catch (Exception e) {
             System.out.println("❌ Failed to send email: " + e.getMessage());

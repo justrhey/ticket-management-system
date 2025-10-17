@@ -21,13 +21,17 @@ public class Ticket{
     private String intent; //Purpose of the ticket
     private String assignedPerson; //Optional if employee neee specific people
     private String priority;
+    private String clientIpAddress;
+    private String computerName;
+    private String userAgent;
 
     //Default constructor wag tanngalin
     public Ticket(){
     }
 
     public Ticket(String fullName, String ticketStatus, String subject, 
-                 LocalDateTime requestedTime, String intent, String assignedPerson, String priority) {
+                 LocalDateTime requestedTime, String intent, String assignedPerson, String priority,
+                 String clientIpAddress, String computerName, String userAgent) {
         this.fullName = fullName;
         this.ticketStatus = ticketStatus;
         this.subject = subject;
@@ -35,11 +39,26 @@ public class Ticket{
         this.intent = intent;
         this.assignedPerson = assignedPerson;
         this.priority = priority;
+        this.clientIpAddress = clientIpAddress;
+        this.computerName = computerName;
+        this.userAgent = userAgent;
     }
 
     //Getters
     public Long getTicketId(){
         return this.ticketId;
+    }
+
+    public String getClientIpAddress(){
+        return clientIpAddress;
+    }
+
+    public String getComputerName(){
+        return computerName;
+    }
+
+    public String getUserAgent(){
+        return userAgent;
     }
 
     public String getFullName(){
@@ -72,6 +91,18 @@ public class Ticket{
     }
 
     //Setters
+    public void setClientIpAddress(String clientIpAddress){
+        this.clientIpAddress = clientIpAddress;
+    }
+
+    public void setComputerName(String computerName){
+        this.computerName = computerName;
+    }
+
+    public void setUserAgent(String userAgent){
+        this.userAgent = userAgent;
+    }
+
     public void setTicketId(Long ticketId){
         this.ticketId = ticketId;
     }
@@ -117,9 +148,12 @@ public class Ticket{
                 ", requestedTime=" + requestedTime +
                 ", intent='" + intent + '\'' +
                 ", assignedPerson='" + assignedPerson + '\'' +
-                ", requestedTime='" + requestedTime + '\'' +
                 ", priority='" + priority + '\'' +
+                ", clientIpAddress='" + clientIpAddress + '\'' +
+                ", computerName='" + computerName + '\'' +
+                ", userAgent='" + userAgent + '\'' +
                 '}';
+
     }
 }
 

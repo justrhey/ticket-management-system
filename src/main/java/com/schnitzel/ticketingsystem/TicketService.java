@@ -24,7 +24,8 @@ public class TicketService {
     private EmailService emailService;
 
     public boolean updateTicket(Long ticketId, String fullName, String ticketStatus, String subject, 
-                 LocalDateTime requestedTime, String intent, String assignedPerson, String priority){
+                 LocalDateTime requestedTime, String intent, String assignedPerson, String priority,
+                 String clientIpAddress, String computerName, String userAgent){
         Optional<Ticket> existingTicket = ticketRepository.findById(ticketId); 
         if(existingTicket.isPresent()){
             Ticket ticket = existingTicket.get();
@@ -51,6 +52,15 @@ public class TicketService {
             if(priority != null){
                 ticket.setPriority(priority.trim());
             }
+            if(clientIpAddress != null){
+                ticket.setClientIpAddress(clientIpAddress.trim());
+            }
+            if(computerName != null){
+                ticket.setComputerName(computerName.trim());
+            }
+            if(userAgent != null){
+                ticket.setUserAgent(userAgent.trim());
+            }
             
             ticketRepository.save(ticket);
             return true;
@@ -59,7 +69,8 @@ public class TicketService {
     }
 
     public boolean registerTicket(String fullName, String ticketStatus, String subject, 
-                 LocalDateTime requestedTime, String intent, String assignedPerson, String priority){
+                 LocalDateTime requestedTime, String intent, String assignedPerson, String priority,
+                 String clientIpAddress, String computerName, String userAgent){
         
         // Validate input
         if(!validator.isValidFullName(fullName)){
@@ -70,7 +81,7 @@ public class TicketService {
         }
 
         // Create new ticket
-        Ticket newTicket = new Ticket(fullName, ticketStatus, subject, requestedTime, intent, assignedPerson, priority);
+        Ticket newTicket = new Ticket(fullName, ticketStatus, subject, requestedTime, intent, assignedPerson, priority, clientIpAddress, computerName, userAgent);
         ticketRepository.save(newTicket);
         return true;
     }
@@ -99,7 +110,8 @@ public class TicketService {
         return ticketRepository.findByTicketStatusContainingOrFullNameContaining(query, query);
     }
 
-public Ticket createTicket(String fullName, String subject, String description, String assignedPerson, String priority) {
+public Ticket createTicket(String fullName, String subject, String description, String assignedPerson, String priority, String clientIpAddress,
+String computerName, String userAgent) {
     Ticket newTicket = new Ticket();
     newTicket.setFullName(fullName);
     newTicket.setSubject(subject);
@@ -108,7 +120,10 @@ public Ticket createTicket(String fullName, String subject, String description, 
     newTicket.setTicketStatus("Open");
     newTicket.setRequestedTime(java.time.LocalDateTime.now());
     newTicket.setPriority(priority);
-    
+    newTicket.setClientIpAddress(clientIpAddress);
+    newTicket.setComputerName(computerName);
+    newTicket.setUserAgent(userAgent);
+
     Ticket savedTicket = ticketRepository.save(newTicket);
     
     // Send email notification

@@ -18,13 +18,17 @@ public class TicketRegistrationRequest {
     private String intent;
     private String assignedPerson;
     private String priority;
+    private String clientIpAddress;
+    private String computerName;
+    private String userAgent;
 
     public TicketRegistrationRequest() {
     }
 
     public TicketRegistrationRequest(Long ticketId, String fullName, String ticketStatus, 
                                     String subject, LocalDateTime requestedTime,
-                                    String intent, String assignedPerson, String priority) {
+                                    String intent, String assignedPerson, String priority,
+                                    String clientIpAddress, String computerName, String userAgent) {
         this.ticketId = ticketId;
         this.fullName = fullName;
         this.ticketStatus = ticketStatus;
@@ -33,11 +37,27 @@ public class TicketRegistrationRequest {
         this.intent = intent;
         this.assignedPerson = assignedPerson;
         this.priority = priority;
+        this.clientIpAddress = clientIpAddress;
+        this.computerName = computerName;
+        this.userAgent = userAgent;
     }
 
     public Long getTicketId() {
         return this.ticketId;
     }
+
+    public String getClientIpAddress(){
+        return clientIpAddress;
+    }
+
+    public String getComputerName(){
+        return computerName;
+    }
+
+    public String getUserAgent(){
+        return userAgent;
+    }
+
 
     public String getFullName() {
         return fullName;
@@ -66,6 +86,19 @@ public class TicketRegistrationRequest {
     public String getPriority(){
         return priority;
     }
+
+    public void setClientIpAddress(String clientIpAddress){
+        this.clientIpAddress = clientIpAddress;
+    }
+
+    public void setComputerName(String computerName){
+        this.computerName = computerName;
+    }
+
+    public void setUserAgent(String userAgent){
+        this.userAgent = userAgent;
+    }
+
 
     public void setPriority(String priority){
         this.priority = priority;
