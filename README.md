@@ -1,245 +1,130 @@
-# Ticket Management System 🎫
 
-A comprehensive full-stack ticket management system built with Spring Boot backend and vanilla JavaScript frontend. Features a modern, responsive interface with real-time filtering, bulk actions, and comprehensive ticket lifecycle management.
 
-![Java](https://img.shields.io/badge/Java-17%2B-orange?style=for-the-badge&logo=java)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0%2B-brightgreen?style=for-the-badge&logo=springboot)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-yellow?style=for-the-badge&logo=javascript)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%2B-blue?style=for-the-badge&logo=postgresql)
+---
 
-## 📊 Project Overview
+# Ticket Management System
 
-```mermaid
-graph TD
-    A[Frontend UI] --> B[REST API]
-    B --> C[Spring Boot Backend]
-    C --> D[PostgreSQL Database]
-    C --> E[Security Layer]
-    
-    A --> F[Real-time Search]
-    A --> G[Status Filtering]
-    A --> H[Bulk Actions]
-    A --> I[Modal System]
-```
+A lightweight and efficient ticket dashboard system built with **Spring Boot (Java)** and **vanilla JavaScript**.
+Designed for single-account access, it offers real-time monitoring, email alerts, and sound notifications through a simple yet responsive interface.
 
-## 🚀 Features
+![Java](https://img.shields.io/badge/Java-17%2B-orange?style=for-the-badge\&logo=java)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0%2B-brightgreen?style=for-the-badge\&logo=springboot)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-yellow?style=for-the-badge\&logo=javascript)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%2B-blue?style=for-the-badge\&logo=postgresql)
+![Docker](https://img.shields.io/badge/Docker-Compose-blue?style=for-the-badge\&logo=docker)
 
-### 🎯 Core Functionality
-- **✅ Complete CRUD Operations** - Create, read, update, delete tickets
-- **🔍 Advanced Filtering** - Filter by status (Open, In Progress, Resolved, Closed)
-- **📱 Responsive Design** - Works seamlessly on desktop and mobile
-- **⚡ Real-time Search** - Instant search across all ticket fields
-- **🔄 Bulk Operations** - Mass update, assign, close, or delete tickets
+---
 
-### 🎨 User Experience
-- **📊 Smart Sidebar** - Real-time ticket statistics and quick filters
-- **🎪 Modal System** - Clean, intuitive modal-based interactions
-- **📈 Status Tracking** - Visual status badges with color coding
-- **⏰ Smart Pagination** - Efficient handling of large datasets
-- **🎯 Priority System** - Urgent, High, Medium, Low priority levels
+## Overview
 
-### 🔧 Technical Features
-- **🛡️ Input Validation** - Comprehensive client and server-side validation
-- **📝 Rich Text Support** - Detailed ticket descriptions
-- **👥 Assignment System** - Team member assignment tracking
-- **📅 Date Management** - Automatic timestamp tracking
-- **🔒 Security Ready** - Prepared for authentication integration
+This project is a simple internal tool for managing tickets with a single dashboard.
+It includes essential ticket CRUD operations, live updates, and notifications without user management complexity.
 
-## 🏗️ System Architecture
+---
+
+## Features
+
+* Single admin dashboard
+* Real-time ticket monitoring
+* Email notifications
+* Sound-based alerts
+* Responsive layout
+* Docker-ready deployment
+
+---
+
+## System Architecture
 
 ```mermaid
 flowchart TD
     subgraph Frontend
-        A[HTML5 UI] --> B[Vanilla JS]
-        B --> C[CSS3 Styling]
-        B --> D[Fetch API]
+        A[HTML5 + Vanilla JS] --> B[CSS3 Styling]
+        A --> C[Fetch API Requests]
     end
 
     subgraph Backend
-        E[Spring Boot REST API] --> F[Service Layer]
-        F --> G[Data Repository]
-        G --> H[PostgreSQL DB]
+        D[Spring Boot REST API] --> E[Service Layer]
+        E --> F[JPA Repository]
+        F --> G[PostgreSQL Database]
+        E --> H[Notification Service]
     end
 
-    B <--> E
+    C <--> D
 ```
 
-## 🛠️ Technology Stack
+---
 
-### Backend
-- **Java 17+** - Core programming language
-- **Spring Boot 3.0+** - Application framework
-- **Spring Data JPA** - Database abstraction
-- **PostgreSQL 15+** - Primary database
-- **Maven** - Dependency management
+## Technology Stack
 
-### Frontend
-- **Vanilla JavaScript ES6+** - No framework dependencies
-- **HTML5** - Semantic markup
-- **CSS3** - Modern styling with Flexbox/Grid
-- **Fetch API** - HTTP requests
+| Layer      | Technology              |
+| ---------- | ----------------------- |
+| Backend    | Java 17+, Spring Boot 3 |
+| Database   | PostgreSQL 15+          |
+| Frontend   | HTML5, CSS3, JavaScript |
+| Container  | Docker, Docker Compose  |
+| Build Tool | Maven                   |
 
-### Development Tools
-- **Git** - Version control
-- **Postman** - API testing
-- **Chrome DevTools** - Debugging
+---
 
-## 📋 API Documentation
+## Setup
 
-### Endpoints Overview
+### Docker Compose
 
-| Method | Endpoint | Description | Parameters |
-|--------|----------|-------------|------------|
-| `GET` | `/api/tickets` | Get all tickets | `?search=`, `?status=`, `?sort=` |
-| `GET` | `/api/tickets/{id}` | Get specific ticket | Path: `id` |
-| `POST` | `/api/tickets` | Create new ticket | JSON body |
-| `PUT` | `/api/tickets/{id}` | Update ticket | Path: `id`, JSON body |
-| `DELETE` | `/api/tickets/{id}` | Delete ticket | Path: `id` |
-
-### Ticket Model Schema
-```json
-{
-  "ticketId": 1,
-  "subject": "Technical Support Request",
-  "intent": "Detailed description of the issue",
-  "fullName": "John Doe",
-  "ticketStatus": "OPEN",
-  "priority": "HIGH",
-  "assignedPerson": "Support Team",
-  "requestedTime": "2024-01-15T10:30:00Z"
-}
+```bash
+docker-compose up --build
 ```
 
-## 🚀 Quick Start
+### Manual Run
 
-### Prerequisites
-- Java 17 or higher
-- Maven 3.6+
-- PostgreSQL 15+
-- Modern web browser
-
-### Access the Application
-- Frontend: `http://localhost:8000`
-- Backend API: `http://localhost:8080`
-
-## 🎮 Usage Guide
-
-### Creating Tickets
-1. Click **"+ New Ticket"** button
-2. Fill in contact information
-3. Select category and priority
-4. Provide detailed description
-5. Submit to create ticket
-
-### Managing Tickets
-- **Filter**: Use sidebar checkboxes to filter by status
-- **Search**: Type in search box for instant filtering
-- **Edit**: Click Edit button on any ticket row
-- **Bulk Actions**: Select multiple tickets for mass operations
-
-### Status Workflow
-```mermaid
-graph LR
-    A[📥 OPEN] --> B[🔄 IN_PROGRESS]
-    B --> C[✅ RESOLVED]
-    C --> D[📭 CLOSED]
-    B --> A
-    C --> B
+```bash
+git clone https://github.com/justrhey/ticket-management-system.git
+cd ticket-management-system
+mvn clean install
+mvn spring-boot:run
 ```
 
-## 🔧 Configuration
+### Database
 
-### Database Setup
 ```sql
 CREATE DATABASE ticketdb;
 CREATE USER ticketuser WITH PASSWORD 'securepassword';
 GRANT ALL PRIVILEGES ON DATABASE ticketdb TO ticketuser;
 ```
 
-### Application Properties
-```properties
-# Backend configuration
-server.port=8080
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+---
 
-# CORS configuration (for frontend communication)
-cors.allowed-origins=http://localhost:8000
-```
+## API Overview
 
-## 🧪 Testing
+| Method | Endpoint            | Description       |
+| ------ | ------------------- | ----------------- |
+| GET    | `/api/tickets`      | Fetch all tickets |
+| POST   | `/api/tickets`      | Create a ticket   |
+| PUT    | `/api/tickets/{id}` | Update a ticket   |
+| DELETE | `/api/tickets/{id}` | Delete a ticket   |
 
-### API Testing with curl
+---
+
+## Example Request
+
 ```bash
-# Get all tickets
-curl -X GET http://localhost:8080/api/tickets
-
-# Create new ticket
 curl -X POST http://localhost:8080/api/tickets \
   -H "Content-Type: application/json" \
-  -d '{"subject":"Test Ticket","fullName":"Test User","intent":"Test description","priority":"MEDIUM"}'
-
-# Update ticket
-curl -X PUT http://localhost:8080/api/tickets/1 \
-  -H "Content-Type: application/json" \
-  -d '{"ticketStatus":"RESOLVED"}'
+  -d '{"subject":"Issue","fullName":"User","intent":"System Error","priority":"HIGH"}'
 ```
 
-## 📈 Performance Metrics
+---
 
-| Operation | Average Response Time | Concurrent Users |
-|-----------|----------------------|------------------|
-| Load All Tickets | < 100ms | 100+ |
-| Search Filter | < 50ms | 50+ |
-| Create Ticket | < 200ms | 50+ |
-| Bulk Operations | < 500ms | 25+ |
+## Acknowledgments
 
-## 🔒 Security Features
-
-- **Input Validation** - All user inputs are sanitized
-- **XSS Protection** - HTML escaping on all outputs
-- **SQL Injection Prevention** - Parameterized queries
-- **CORS Configuration** - Controlled cross-origin access
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
-```bash
-# Fork and clone the repository
-git clone https://github.com/justrhey/ticket-management-system.git
-
-# Create feature branch
-git checkout -b feature/amazing-feature
-
-# Commit changes
-git commit -m "Add amazing feature"
-
-# Push to branch
-git push origin feature/amazing-feature
-
-# Create Pull Request
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🏆 Acknowledgments
-
-- Spring Boot team for the excellent framework
-- PostgreSQL community for robust database solutions
-- All contributors who helped improve this system
-- Virspacio Co Working Space IT dept for proposing the system
-- A reference that i used when i created user-registration-service
+* Spring Boot and PostgreSQL community
+* Virspacio Co-Working Space IT Dept (concept origin)
+* Reference: user-registration-service
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by [justrhey](https://github.com/justrhey)**
-
-[⬆ Back to Top](#ticket-management-system-)
+**Made by [justrhey](https://github.com/justrhey)**
+[Back to Top](#ticket-management-system)
 
 </div>
