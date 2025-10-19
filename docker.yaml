@@ -5,9 +5,9 @@ services:
     image: postgres:15-alpine
     container_name: ticket-postgres
     environment:
-      POSTGRES_DB: ticketdb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -15,7 +15,7 @@ services:
     networks:
       - ticket-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ticketdb"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,10 +31,9 @@ services:
     networks:
       - ticket-network
     environment:
-      # Override for Docker internal networking
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ticketdb
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
     restart: unless-stopped
 
 volumes:
