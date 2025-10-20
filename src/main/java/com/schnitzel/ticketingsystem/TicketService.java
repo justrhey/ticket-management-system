@@ -5,11 +5,11 @@ import com.schnitzel.ticketingsystem.service.EmailService;
 import java.util.List;
 import java.util.Optional;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors; // Add this import
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
 
 @Service
 public class TicketService {
@@ -113,26 +113,57 @@ public class TicketService {
         return ticketRepository.findByTicketStatusContainingOrFullNameContaining(query, query);
     }
 
-public Ticket createTicket(String fullName, String subject, String description, String assignedPerson, String priority, String clientIpAddress,
-String computerName, String userAgent, String itComment) {
-    Ticket newTicket = new Ticket();
-    newTicket.setFullName(fullName);
-    newTicket.setSubject(subject);
-    newTicket.setIntent(description); // Using 'intent' field for description
-    newTicket.setAssignedPerson(assignedPerson);
-    newTicket.setTicketStatus("Open");
-    newTicket.setRequestedTime(java.time.LocalDateTime.now());
-    newTicket.setPriority(priority);
-    newTicket.setClientIpAddress(clientIpAddress);
-    newTicket.setComputerName(computerName);
-    newTicket.setUserAgent(userAgent);
-    newTicket.setItComment(itComment);
+    public Ticket createTicket(String fullName, String subject, String description, String assignedPerson, String priority, String clientIpAddress,
+    String computerName, String userAgent, String itComment) {
+        Ticket newTicket = new Ticket();
+        newTicket.setFullName(fullName);
+        newTicket.setSubject(subject);
+        newTicket.setIntent(description); // Using 'intent' field for description
+        newTicket.setAssignedPerson(assignedPerson);
+        newTicket.setTicketStatus("Open");
+        newTicket.setRequestedTime(java.time.LocalDateTime.now());
+        newTicket.setPriority(priority);
+        newTicket.setClientIpAddress(clientIpAddress);
+        newTicket.setComputerName(computerName);
+        newTicket.setUserAgent(userAgent);
+        newTicket.setItComment(itComment);
 
-    Ticket savedTicket = ticketRepository.save(newTicket);
+        Ticket savedTicket = ticketRepository.save(newTicket);
+        
+        // Send email notification
+        emailService.sendNewTicketNotification(fullName, subject, description);
+        
+        return savedTicket;
+    }
+
+    public List<Ticket> getTicketsByIds(List<Long> ticketIds) {
+        return ticketRepository.findByTicketIdIn(ticketIds);
+    }
     
-    // Send email notification
-    emailService.sendNewTicketNotification(fullName, subject, description);
+    public List<Ticket> getFilteredTickets(List<String> status, String search) {
+        if ((status == null || status.isEmpty()) && (search == null || search.isEmpty())) {
+            return getAllTickets();
+        }
+        
+        // Implement basic filtering logic
+        List<Ticket> allTickets = getAllTickets();
+        
+        return allTickets.stream()
+            .filter(ticket -> {
+                boolean statusMatch = status == null || status.isEmpty() || 
+                                   status.contains(ticket.getTicketStatus());
+                boolean searchMatch = search == null || search.isEmpty() ||
+                                    containsSearchTerm(ticket, search);
+                return statusMatch && searchMatch;
+            })
+            .collect(Collectors.toList());
+    }
     
-    return savedTicket;
-}
+    private boolean containsSearchTerm(Ticket ticket, String search) {
+        String searchLower = search.toLowerCase();
+        return (ticket.getSubject() != null && ticket.getSubject().toLowerCase().contains(searchLower)) ||
+               (ticket.getFullName() != null && ticket.getFullName().toLowerCase().contains(searchLower)) ||
+               (ticket.getIntent() != null && ticket.getIntent().toLowerCase().contains(searchLower)) ||
+               (ticket.getAssignedPerson() != null && ticket.getAssignedPerson().toLowerCase().contains(searchLower));
+    }
 }

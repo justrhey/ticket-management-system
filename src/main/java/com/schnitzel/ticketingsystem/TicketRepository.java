@@ -8,4 +8,7 @@ import java.util.List;
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Long>{
    List<Ticket> findByTicketStatusContainingOrFullNameContaining(String ticketStatus, String fullName);
+   
+       List<Ticket> findByTicketIdIn(List<Long> ticketIds);
+
    }

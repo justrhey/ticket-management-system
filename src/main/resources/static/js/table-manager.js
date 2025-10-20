@@ -19,76 +19,258 @@ let lastTicketCount = 0;
 // Modal state variables
 let currentTicketId = null;
 
+// MP3 Sound Notification System
 const notificationSounds = {
-    'new-ticket': 'new-ticket',
-    'ticket-update': 'ticket-update', 
-    'success': 'success',
-    'error': 'error',
-    'info': 'info'
+    'new-ticket': '/sounds/ticket-notif.mp3',
+    'ticket-update': '/sounds/ticket-notif.mp3',
+    'success': '/sounds/success.mp3',
+    'error': '/sounds/error.mp3',
+    'info': '/sounds/ticket-notif.mp3'
 };
 
-function preloadSounds() {
-    console.log('Sound system initialized - using browser audio API');
+
+let audioEnabled = false;
+let audioContext = null;
+
+// Test sound file accessibility with better logging
+function testSoundFiles() {
+    console.log('=== TESTING SOUND FILES ===');
+    
+    Object.entries(notificationSounds).forEach(([soundType, soundPath]) => {
+        fetch(soundPath, { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    console.log('FOUND: ' + soundPath);
+                } else {
+                    console.error('NOT FOUND (' + response.status + '): ' + soundPath);
+                }
+            })
+            .catch(error => {
+                console.error('ERROR accessing: ' + soundPath, error);
+            });
+    });
 }
 
-function playNotificationSound(soundType = 'info') {
+// Enable audio on user interaction
+function enableAudio() {
+    if (audioEnabled) {
+        console.log('Audio already enabled');
+        return;
+    }
+    
+    console.log('Enabling audio system...');
+    
+    // Create and play silent audio to unlock browser audio
+    const silentAudio = new Audio();
+    silentAudio.volume = 0.001; // Almost silent instead of completely silent
+    silentAudio.src = '/sounds/ticket-notif.mp3'; // Use actual file
+    
+    const playPromise = silentAudio.play();
+    
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                // Audio played successfully
+                silentAudio.pause();
+                silentAudio.currentTime = 0;
+                audioEnabled = true;
+                console.log('Audio system ENABLED!');
+                showAudioEnabledMessage();
+                
+                // Test sound playback
+                setTimeout(() => {
+                    console.log('Testing sound playback...');
+                    playTestSound();
+                }, 300);
+            })
+            .catch(error => {
+                console.error('Failed to enable audio:', error);
+                // Try alternative method
+                attemptAlternativeAudioEnable();
+            });
+    }
+}
+
+function attemptAlternativeAudioEnable() {
+    console.log('Trying alternative audio enable...');
+    
+    // Try using Web Audio API
     try {
-        // Use Web Audio API for browser-based sounds
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create a very short, almost silent beep
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
         
-        // Different frequencies for different notification types
-        const frequencies = {
-            'success': 800,
-            'error': 400,
-            'new-ticket': 600,
-            'ticket-update': 500,
-            'info': 300
-        };
+        oscillator.frequency.value = 1; // Very low frequency
+        gainNode.gain.value = 0.001; // Almost silent
+        oscillator.type = 'sine';
         
-        const frequency = frequencies[soundType] || 500;
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.01); // Very short
         
-        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.3);
-        
-        console.log('Played sound:', soundType);
+        audioEnabled = true;
+        console.log('Audio enabled via Web Audio API');
+        showAudioEnabledMessage();
         
     } catch (error) {
-        console.log('Sound playback failed:', error);
-        // Fallback: Use browser's speech synthesis for accessibility
-        if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance();
-            utterance.text = ' '; // Silent utterance
-            utterance.volume = 0;
-            window.speechSynthesis.speak(utterance);
-        }
+        console.error('All audio enable methods failed:', error);
+        // Last resort - just set enabled and hope for the best
+        audioEnabled = true;
+        console.log('Audio marked as enabled (last resort)');
     }
 }
 
-// Load tickets when page loads
+function showAudioEnabledMessage() {
+    const msg = document.createElement('div');
+    msg.textContent = 'Sound Enabled!';
+    msg.style.cssText = 'position:fixed;top:20px;right:20px;background:#28a745;color:white;padding:10px 20px;border-radius:5px;z-index:10000;font-family:Arial,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,0.2);';
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 2000);
+}
+
+function playTestSound() {
+    console.log('Playing test sound...');
+    playNotificationSound('success', true);
+}
+
+// Enhanced play function with better error handling
+function playNotificationSound(soundType = 'info', isTest = false) {
+    if (!audioEnabled) {
+        if (!isTest) {
+            console.warn('Audio not enabled yet - need user interaction');
+            showAudioEnablePrompt();
+        }
+        return;
+    }
+
+    const soundPath = notificationSounds[soundType] || notificationSounds['info'];
+    
+    if (isTest) {
+        console.log('Testing sound: ' + soundType + ' -> ' + soundPath);
+    }
+
+    const audio = new Audio(soundPath);
+    audio.volume = 0.7;
+    
+    // Add event listeners for debugging
+    audio.addEventListener('canplay', () => {
+        console.log('Audio can play: ' + soundType);
+    });
+    
+    audio.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        console.log('Audio error details:', audio.error);
+    });
+    
+    audio.addEventListener('loadstart', () => {
+        console.log('Loading: ' + soundType);
+    });
+    
+    audio.addEventListener('playing', () => {
+        console.log('Now playing: ' + soundType);
+    });
+    
+    // Attempt to play
+    const playPromise = audio.play();
+    
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                console.log('Sound playing: ' + soundType);
+                
+                // Auto-remove the audio element after playback to prevent memory leaks
+                audio.addEventListener('ended', () => {
+                    audio.remove();
+                });
+            })
+            .catch(playError => {
+                console.error('Play failed:', playError);
+                
+                // If it's an autoplay issue, show user instruction
+                if (playError.name === 'NotAllowedError') {
+                    console.warn('Autoplay blocked - user needs to interact with page first');
+                    showAutoplayBlockedMessage();
+                }
+            });
+    }
+}
+
+function showAudioEnablePrompt() {
+    // Remove any existing prompt
+    const existingPrompt = document.querySelector('.audio-prompt');
+    if (existingPrompt) existingPrompt.remove();
+    
+    const msg = document.createElement('div');
+    msg.className = 'audio-prompt';
+    msg.textContent = 'Click anywhere to enable sounds';
+    msg.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#ffc107;color:black;padding:10px 20px;border-radius:5px;z-index:10000;font-family:Arial,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,0.2);cursor:pointer;';
+    
+    msg.addEventListener('click', enableAudio);
+    document.body.appendChild(msg);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (msg.parentNode) {
+            msg.remove();
+        }
+    }, 5000);
+}
+
+function showAutoplayBlockedMessage() {
+    const msg = document.createElement('div');
+    msg.innerHTML = 'Click to allow sounds<br><small>Browser requires interaction</small>';
+    msg.style.cssText = 'position:fixed;bottom:20px;left:20px;background:#dc3545;color:white;padding:10px 15px;border-radius:5px;z-index:10000;font-family:Arial,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,0.2);cursor:pointer;text-align:center;';
+    
+    msg.addEventListener('click', () => {
+        enableAudio();
+        msg.remove();
+    });
+    
+    document.body.appendChild(msg);
+    
+    setTimeout(() => {
+        if (msg.parentNode) {
+            msg.remove();
+        }
+    }, 5000);
+}
+
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== SOUND SYSTEM INITIALIZATION ===');
     console.log('DOM loaded - initializing table manager...');
     
-    // Initialize systems
-    preloadSounds();
     initializeNetworkInfo();
-    initializeEventListeners();
-    
-    // Load data
     loadTickets();
-    
-    // Set up auto-refresh
+    initializeEventListeners();
     initializeAutoRefresh();
     
-    console.log('Table manager fully initialized');
+    // Test sound files after a short delay
+    setTimeout(() => {
+        console.log('Testing sound file accessibility...');
+        testSoundFiles();
+    }, 1000);
+    
+    // Enable audio on ANY user interaction
+    const enableOnInteraction = () => {
+        console.log('User interaction detected - enabling audio');
+        enableAudio();
+        
+        // Remove listeners after first successful interaction
+        document.removeEventListener('click', enableOnInteraction);
+        document.removeEventListener('keydown', enableOnInteraction);
+        document.removeEventListener('touchstart', enableOnInteraction);
+    };
+    
+    document.addEventListener('click', enableOnInteraction);
+    document.addEventListener('keydown', enableOnInteraction);
+    document.addEventListener('touchstart', enableOnInteraction);
+    
+    console.log('Sound system ready - click anywhere to enable sounds');
 });
 
 function initializeAutoRefresh(){
@@ -122,7 +304,7 @@ function startAutoRefresh() {
         try {
             await checkForUpdates();
         } catch (error) {
-            console.error('Auto-refresh error:', error);
+            console.error('Auto-refresh error: ' + error);
         }
     }, refreshInterval);
     
@@ -132,7 +314,7 @@ function startAutoRefresh() {
 function updateRefreshIndicator(isActive) {
     const indicator = document.getElementById('refresh-indicator');
     if (indicator) {
-        indicator.innerHTML = isActive ? '🟢 Live' : '🔴 Off';
+        indicator.innerHTML = isActive ? 'Live' : 'Off';
         indicator.title = isActive ? 'Live updates enabled' : 'Live updates disabled';
     }
 }
@@ -148,7 +330,7 @@ function stopAutoRefresh() {
 async function checkForUpdates() {
     try {
         const response = await fetch(API_BASE);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
         
         const newTickets = await response.json();
         const newTicketCount = newTickets.length;
@@ -173,7 +355,7 @@ async function checkForUpdates() {
         lastTicketCount = newTicketCount;
         
     } catch (error) {
-        console.error('Error checking for updates:', error);
+        console.error('Error checking for updates: ' + error);
     }
 }
 
@@ -185,8 +367,8 @@ function detectTicketChanges(newTickets) {
         // Status change
         if (oldTicket.ticketStatus !== newTicket.ticketStatus) {
             showTicketUpdateNotification(
-                `Ticket #${newTicket.ticketId} status changed`,
-                `Status changed from ${oldTicket.ticketStatus} to ${newTicket.ticketStatus}`,
+                'Ticket #' + newTicket.ticketId + ' status changed',
+                'Status changed from ' + oldTicket.ticketStatus + ' to ' + newTicket.ticketStatus,
                 'info'
             );
         }
@@ -194,8 +376,8 @@ function detectTicketChanges(newTickets) {
         // Assignment change
         if (oldTicket.assignedPerson !== newTicket.assignedPerson) {
             showTicketUpdateNotification(
-                `Ticket #${newTicket.ticketId} reassigned`,
-                `Assigned to ${newTicket.assignedPerson || 'Unassigned'}`,
+                'Ticket #' + newTicket.ticketId + ' reassigned',
+                'Assigned to ' + (newTicket.assignedPerson || 'Unassigned'),
                 'info'
             );
         }
@@ -203,7 +385,7 @@ function detectTicketChanges(newTickets) {
         // IT comments added
         if (oldTicket.itComment !== newTicket.itComment && newTicket.itComment) {
             showTicketUpdateNotification(
-                `Ticket #${newTicket.ticketId} updated`,
+                'Ticket #' + newTicket.ticketId + ' updated',
                 'New IT comments added',
                 'success'
             );
@@ -214,7 +396,7 @@ function detectTicketChanges(newTickets) {
 function showNewTicketNotification(count) {
     const message = count === 1 
         ? '1 new ticket has been created' 
-        : `${count} new tickets have been created`;
+        : count + ' new tickets have been created';
     showNotification('New Tickets', message, 'success', 'new-ticket');
 }
 
@@ -265,7 +447,7 @@ function initializeNetworkInfo() {
             localStorage.setItem('clientIpAddress', data.ip);
         })
         .catch(error => {
-            console.error('Failed to get IP:', error);
+            console.error('Failed to get IP: ' + error);
             localStorage.setItem('clientIpAddress', 'Unknown');
         });
 
@@ -328,13 +510,13 @@ function initializeEventListeners() {
 async function loadTickets() {
     try {
         showLoading();
-        console.log('Loading tickets from:', API_BASE);
+        console.log('Loading tickets from: ' + API_BASE);
         
         const response = await fetch(API_BASE);
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        if (!response.ok) throw new Error('HTTP ' + response.status + ': ' + response.statusText);
         
         allTickets = await response.json();
-        console.log('Loaded tickets:', allTickets.length);
+        console.log('Loaded tickets: ' + allTickets.length);
         
         if (allTickets.length > 0) {
             lastTicketCount = allTickets.length;
@@ -343,7 +525,7 @@ async function loadTickets() {
         applyFiltersAndSort();
         hideLoading();
     } catch (error) {
-        console.error('Error loading tickets:', error);
+        console.error('Error loading tickets: ' + error);
         showNotification('Error', 'Failed to load tickets: ' + error.message, 'error');
         hideLoading();
     }
@@ -482,10 +664,10 @@ function displayTickets(tickets) {
 
 // Edit Ticket Functions
 function editTicket(ticketId) {
-    console.log('Edit ticket clicked:', ticketId);
+    console.log('Edit ticket clicked: ' + ticketId);
     const ticket = allTickets.find(t => t.ticketId === ticketId);
     if (!ticket) {
-        console.error('Ticket not found:', ticketId);
+        console.error('Ticket not found: ' + ticketId);
         showNotification('Error', 'Ticket not found', 'error');
         return;
     }
@@ -553,7 +735,7 @@ async function saveTicketEdit() {
             return;
         }
 
-        const response = await fetch(`${API_BASE}/${currentTicketId}`, {
+        const response = await fetch(API_BASE + '/' + currentTicketId, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -581,7 +763,7 @@ async function saveTicketEdit() {
 
 // View Ticket Functions
 function viewTicket(ticketId){
-    console.log('View Ticket clicked', ticketId);
+    console.log('View Ticket clicked ' + ticketId);
     
     if (!ticketId) {
         console.error('No ticket ID provided to view');
@@ -592,7 +774,7 @@ function viewTicket(ticketId){
     console.log('Found Ticket:', ticket);
     
     if (!ticket) {
-        console.error('Ticket not found:', ticketId);
+        console.error('Ticket not found: ' + ticketId);
         console.log('Available Ticket IDs:', allTickets.map(t => t.ticketId));
         showNotification('Error', 'Ticket not found', 'error');
         return;
@@ -611,18 +793,18 @@ function viewTicket(ticketId){
     const viewUseragent = document.getElementById('view-useragent');
     const viewItComment = document.getElementById('view-it-comment');
 
-    if (viewId) viewId.textContent = `#${ticket.ticketId}`;
+    if (viewId) viewId.textContent = '#' + ticket.ticketId;
     if (viewSubject) viewSubject.textContent = ticket.subject || 'No subject';
     if (viewRequester) viewRequester.textContent = ticket.fullName || 'Unknown';
     
     if (viewStatus) {
         const status = ticket.ticketStatus || 'OPEN';
-        viewStatus.innerHTML = `<span class="status-badge status-${status.toLowerCase()}">${status}</span>`;
+        viewStatus.innerHTML = '<span class="status-badge status-' + status.toLowerCase() + '">' + status + '</span>';
     }
     
     if (viewPriority) {
         const priority = ticket.priority || 'MEDIUM';
-        viewPriority.innerHTML = `<span class="priority-badge priority-${priority.toLowerCase()}">${priority}</span>`;
+        viewPriority.innerHTML = '<span class="priority-badge priority-' + priority.toLowerCase() + '">' + priority + '</span>';
     }
     
     if (viewAssigned) viewAssigned.textContent = ticket.assignedPerson || 'Not assigned';
@@ -668,9 +850,9 @@ function closeViewModal() {
     }
 }
 
-// Delete Ticket Functions - 
+// Delete Ticket Functions
 function deleteTicket(ticketId) {
-    console.log('Delete ticket clicked:', ticketId);
+    console.log('Delete ticket clicked: ' + ticketId);
     currentTicketId = ticketId;
     
     const ticket = allTickets.find(t => t.ticketId === ticketId);
@@ -679,7 +861,7 @@ function deleteTicket(ticketId) {
     // THIS IS THE ONLY PLACE where delete confirmation message is set
     const confirmMessage = document.getElementById('delete-confirm-message');
     if (confirmMessage) {
-        confirmMessage.textContent = `Are you sure you want to delete ticket #${ticketId} - "${ticketSubject}"? This action cannot be undone.`;
+        confirmMessage.textContent = 'Are you sure you want to delete ticket #' + ticketId + ' - "' + ticketSubject + '"? This action cannot be undone.';
     }
     
     openDeleteModal();
@@ -707,7 +889,7 @@ async function confirmDelete() {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/${currentTicketId}`, {
+        const response = await fetch(API_BASE + '/' + currentTicketId, {
             method: 'DELETE'
         });
 
@@ -779,7 +961,7 @@ async function executeBulkAction() {
     const action = bulkActionSelect.value;
     
     if (action === 'delete') {
-        if (!confirm(`Are you sure you want to delete ${selectedTickets.size} tickets? This action cannot be undone.`)) {
+        if (!confirm('Are you sure you want to delete ' + selectedTickets.size + ' tickets? This action cannot be undone.')) {
             return;
         }
     }
@@ -819,7 +1001,7 @@ async function executeBulkAction() {
         
         closeBulkModal();
         await loadTickets();
-        showNotification('Success', `Action completed successfully for ${selectedTickets.size} tickets`, 'success');
+        showNotification('Success', 'Action completed successfully for ' + selectedTickets.size + ' tickets', 'success');
         clearSelection();
         
     } catch (error) {
@@ -832,7 +1014,7 @@ async function executeBulkAction() {
 async function bulkAssign(assignee) {
     const updates = Array.from(selectedTickets).map(ticketId => {
         const ticket = allTickets.find(t => t.ticketId === ticketId);
-        return fetch(`${API_BASE}/${ticketId}`, {
+        return fetch(API_BASE + '/' + ticketId, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...ticket, assignedPerson: assignee })
@@ -845,7 +1027,7 @@ async function bulkAssign(assignee) {
 async function bulkClose() {
     const updates = Array.from(selectedTickets).map(ticketId => {
         const ticket = allTickets.find(t => t.ticketId === ticketId);
-        return fetch(`${API_BASE}/${ticketId}`, {
+        return fetch(API_BASE + '/' + ticketId, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...ticket, ticketStatus: 'CLOSED' })
@@ -858,7 +1040,7 @@ async function bulkClose() {
 async function bulkChangeStatus(status) {
     const updates = Array.from(selectedTickets).map(ticketId => {
         const ticket = allTickets.find(t => t.ticketId === ticketId);
-        return fetch(`${API_BASE}/${ticketId}`, {
+        return fetch(API_BASE + '/' + ticketId, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...ticket, ticketStatus: status })
@@ -871,7 +1053,7 @@ async function bulkChangeStatus(status) {
 async function bulkChangePriority(priority) {
     const updates = Array.from(selectedTickets).map(ticketId => {
         const ticket = allTickets.find(t => t.ticketId === ticketId);
-        return fetch(`${API_BASE}/${ticketId}`, {
+        return fetch(API_BASE + '/' + ticketId, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...ticket, priority: priority })
@@ -883,7 +1065,7 @@ async function bulkChangePriority(priority) {
 
 async function bulkDelete() {
     const deletePromises = Array.from(selectedTickets).map(ticketId => 
-        fetch(`${API_BASE}/${ticketId}`, {
+        fetch(API_BASE + '/' + ticketId, {
             method: 'DELETE'
         })
     );
@@ -892,7 +1074,7 @@ async function bulkDelete() {
     const failed = results.filter(result => result.status === 'rejected' || !result.value.ok);
     
     if (failed.length > 0) {
-        throw new Error(`Failed to delete ${failed.length} ticket(s)`);
+        throw new Error('Failed to delete ' + failed.length + ' ticket(s)');
     }
 }
 
@@ -1248,5 +1430,10 @@ window.nextPage = nextPage;
 window.refreshTable = refreshTable;
 window.clearFilters = clearFilters;
 window.bulkAction = bulkAction;
+
+// Sound system functions
+window.playNotificationSound = playNotificationSound;
+window.enableAudio = enableAudio;
+window.testSoundFiles = testSoundFiles;
 
 console.log('Table manager initialized successfully');

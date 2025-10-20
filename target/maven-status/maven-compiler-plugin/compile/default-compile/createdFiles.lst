@@ -1,9 +1,14 @@
 com/schnitzel/ticketingsystem/dto/TicketResponse.class
 com/schnitzel/ticketingsystem/TicketingSystemApplication.class
+com/schnitzel/ticketingsystem/userauth/EmployeeService.class
+com/schnitzel/ticketingsystem/config/StaticResourceConfig.class
 com/schnitzel/ticketingsystem/dto/TicketRegistrationRequest.class
+com/schnitzel/ticketingsystem/userauth/EmployeeController.class
 com/schnitzel/ticketingsystem/userauth/UserRepository.class
 com/schnitzel/ticketingsystem/TicketController.class
 com/schnitzel/ticketingsystem/TicketRepository.class
+com/schnitzel/ticketingsystem/userauth/Employee.class
+com/schnitzel/ticketingsystem/userauth/EmployeeRepository.class
 com/schnitzel/ticketingsystem/security/NetworkUtils.class
 com/schnitzel/ticketingsystem/TicketService.class
 com/schnitzel/ticketingsystem/security/Admin.class

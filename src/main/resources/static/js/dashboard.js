@@ -1,5 +1,6 @@
 // Dashboard functionality
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard initialized');
     loadDashboardData();
     loadRecentTickets();
 });
@@ -7,14 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
 // Load dashboard statistics
 async function loadDashboardData() {
     try {
-        const response = await fetch('/api/tickets');
-        if (!response.ok) {
-            throw new Error('Failed to fetch tickets');
-        }
-        const tickets = await response.json();
+        // In a real application, this would fetch from your API
+        // For demo purposes, we'll use mock data
+        const mockTickets = generateMockTickets();
         
-        updateDashboardStats(tickets);
-        updateFilterCounts(tickets);
+        updateDashboardStats(mockTickets);
         
     } catch (error) {
         console.error('Error loading dashboard data:', error);
@@ -29,57 +27,22 @@ function updateDashboardStats(tickets) {
     const closedTickets = tickets.filter(t => t.ticketStatus === 'Closed').length;
     const assignedTickets = tickets.filter(t => t.assignedPerson && t.assignedPerson.trim() !== '').length;
     
-    // Today's tickets (created today)
-    const today = new Date().toDateString();
-    const todayTickets = tickets.filter(t => 
-        new Date(t.requestedTime).toDateString() === today
-    ).length;
-    
-    // This week's tickets
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const weekTickets = tickets.filter(t => 
-        new Date(t.requestedTime) >= oneWeekAgo
-    ).length;
-    
-    // Response rate (simplified - tickets with assigned person)
-    const responseRate = totalTickets > 0 ? 
-        Math.round((assignedTickets / totalTickets) * 100) : 0;
-
     // Update DOM
     document.getElementById('totalTickets').textContent = totalTickets;
     document.getElementById('openTickets').textContent = openTickets;
     document.getElementById('closedTickets').textContent = closedTickets;
     document.getElementById('assignedTickets').textContent = assignedTickets;
-    document.getElementById('todayTickets').textContent = todayTickets;
-    document.getElementById('weekTickets').textContent = weekTickets;
-    document.getElementById('responseRate').textContent = responseRate + '%';
-}
-
-// Update filter counts
-function updateFilterCounts(tickets) {
-    const openCount = tickets.filter(t => t.ticketStatus === 'Open').length;
-    const inProgressCount = tickets.filter(t => t.ticketStatus === 'In Progress').length;
-    const resolvedCount = tickets.filter(t => t.ticketStatus === 'Resolved').length;
-    const closedCount = tickets.filter(t => t.ticketStatus === 'Closed').length;
-    
-    document.getElementById('count-open').textContent = openCount;
-    document.getElementById('count-in-progress').textContent = inProgressCount;
-    document.getElementById('count-resolved').textContent = resolvedCount;
-    document.getElementById('count-closed').textContent = closedCount;
 }
 
 // Load recent tickets
 async function loadRecentTickets() {
     try {
-        const response = await fetch('/api/tickets');
-        if (!response.ok) {
-            throw new Error('Failed to fetch tickets');
-        }
-        const tickets = await response.json();
+        // In a real application, this would fetch from your API
+        // For demo purposes, we'll use mock data
+        const mockTickets = generateMockTickets();
         
         // Sort by date (newest first) and take first 10
-        const recentTickets = tickets
+        const recentTickets = mockTickets
             .sort((a, b) => new Date(b.requestedTime) - new Date(a.requestedTime))
             .slice(0, 10);
         
@@ -106,12 +69,12 @@ function displayRecentTickets(tickets) {
                 ${getActivityIconText(ticket)}
             </div>
             <div class="activity-content">
-                <div class="activity-title">${escapeHtml(ticket.subject)}</div>
+                <div class="activity-title">${escapeHtml(ticket.subject || 'No Subject')}</div>
                 <div class="activity-meta">
                     <span class="activity-id">#${ticket.ticketId}</span>
-                    <span class="activity-requester">${escapeHtml(ticket.fullName)}</span>
+                    <span class="activity-requester">${escapeHtml(ticket.fullName || 'Unknown')}</span>
                     <span class="activity-time">${formatDate(ticket.requestedTime)}</span>
-                    <span class="status-badge status-${(ticket.ticketStatus || 'open').toLowerCase().replace(' ', '-')}">
+                    <span class="status-badge status-${getStatusClass(ticket.ticketStatus)}">
                         ${ticket.ticketStatus || 'Open'}
                     </span>
                 </div>
@@ -138,17 +101,16 @@ function getActivityIconText(ticket) {
     return 'U';
 }
 
-// Filter tickets based on selected statuses
-function filterTickets() {
-    // This would filter the displayed tickets if we had a full list view
-    console.log('Filtering tickets...');
-    // Implementation would depend on having a full tickets view in the dashboard
+// Get CSS class for status badge
+function getStatusClass(status) {
+    if (!status) return 'open';
+    return status.toLowerCase().replace(' ', '-');
 }
 
-// Export data
-function exportData() {
-    alert('Export functionality would be implemented here!');
-    // This could export to CSV, PDF, etc.
+// Filter activities based on selection
+function filterActivities() {
+    const filter = document.getElementById('activity-filter').value;
+    loadRecentTickets(); // In a real app, this would apply the filter to the data
 }
 
 // Refresh entire dashboard
@@ -159,8 +121,13 @@ function refreshDashboard() {
 
 // Utility functions
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    } catch (e) {
+        return 'Invalid Date';
+    }
 }
 
 function escapeHtml(unsafe) {
@@ -176,6 +143,40 @@ function escapeHtml(unsafe) {
 function showError(message) {
     const container = document.getElementById('activityList');
     container.innerHTML = `<div class="empty-state">${message}</div>`;
+}
+
+// Mock data generator for demo purposes
+function generateMockTickets() {
+    const statuses = ['Open', 'In Progress', 'Resolved', 'Closed'];
+    const subjects = [
+        'Login issues', 'Password reset request', 'Software installation',
+        'Network connectivity problem', 'Email configuration', 'Printer not working',
+        'VPN access required', 'Software license renewal', 'Hardware replacement'
+    ];
+    const names = ['John Smith', 'Jane Doe', 'Robert Johnson', 'Sarah Wilson', 'Michael Brown'];
+    
+    const tickets = [];
+    
+    for (let i = 1; i <= 50; i++) {
+        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        const randomSubject = subjects[Math.floor(Math.random() * subjects.length)];
+        const randomName = names[Math.floor(Math.random() * names.length)];
+        
+        // Create dates within the last 30 days
+        const randomDate = new Date();
+        randomDate.setDate(randomDate.getDate() - Math.floor(Math.random() * 30));
+        
+        tickets.push({
+            ticketId: `TKT${1000 + i}`,
+            subject: randomSubject,
+            fullName: randomName,
+            ticketStatus: randomStatus,
+            requestedTime: randomDate.toISOString(),
+            assignedPerson: Math.random() > 0.3 ? 'Support Agent' : ''
+        });
+    }
+    
+    return tickets;
 }
 
 // Auto-refresh every 30 seconds

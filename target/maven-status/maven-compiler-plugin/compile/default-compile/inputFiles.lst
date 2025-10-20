@@ -7,9 +7,14 @@
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/service/EmailService.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/User.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/TicketRepository.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/EmployeeService.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/UserService.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/dto/TicketResponse.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/Ticket.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/dto/TicketRegistrationRequest.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/EmployeeRepository.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/TicketValidatorService.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/Employee.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/EmployeeController.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/UserRepository.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/config/StaticResourceConfig.java
