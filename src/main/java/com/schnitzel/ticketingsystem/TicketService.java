@@ -5,7 +5,7 @@ import com.schnitzel.ticketingsystem.service.EmailService;
 import java.util.List;
 import java.util.Optional;
 import java.time.LocalDateTime;
-import java.util.stream.Collectors; // Add this import
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
@@ -79,9 +79,6 @@ public class TicketService {
         if(!validator.isValidFullName(fullName)){
             return false;
         }
-        if(fullName == null || fullName.trim().isEmpty()){
-            return false;
-        }
 
         // Create new ticket
         Ticket newTicket = new Ticket(fullName, ticketStatus, subject, requestedTime, intent, assignedPerson, priority, clientIpAddress, computerName, userAgent, itComment);
@@ -97,6 +94,11 @@ public class TicketService {
         return ticketRepository.findAll();
     }
 
+    // FIXED: Renamed to avoid conflict
+    public Page<Ticket> getAllTicketsPaginated(Pageable pageable){ 
+        return ticketRepository.findAll(pageable);
+    }
+
     public boolean deleteTicket(Long ticketId){
         if(ticketRepository.existsById(ticketId)){ 
             ticketRepository.deleteById(ticketId);
@@ -105,16 +107,17 @@ public class TicketService {
         return false;
     }
 
-    public Page<Ticket> getAllTickets(Pageable pageable){ 
-        return ticketRepository.findAll(pageable);
-    }
-
     public List<Ticket> searchTickets(String query){ 
         return ticketRepository.findByTicketStatusContainingOrFullNameContaining(query, query);
     }
 
     public Ticket createTicket(String fullName, String subject, String description, String assignedPerson, String priority, String clientIpAddress,
     String computerName, String userAgent, String itComment) {
+        // Validate input first
+        if(!validator.isValidFullName(fullName)){
+            throw new IllegalArgumentException("Invalid full name");
+        }
+
         Ticket newTicket = new Ticket();
         newTicket.setFullName(fullName);
         newTicket.setSubject(subject);
@@ -136,10 +139,6 @@ public class TicketService {
         return savedTicket;
     }
 
-    public List<Ticket> getTicketsByIds(List<Long> ticketIds) {
-        return ticketRepository.findByTicketIdIn(ticketIds);
-    }
-    
     public List<Ticket> getFilteredTickets(List<String> status, String search) {
         if ((status == null || status.isEmpty()) && (search == null || search.isEmpty())) {
             return getAllTickets();
