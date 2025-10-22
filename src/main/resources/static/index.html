@@ -51,12 +51,18 @@
             </div>
             <div class="modal-body">
                 <form id="createForm">
-                    <!-- Contact Information Section -->
+                    <!-- User Authentication Section -->
                     <div class="form-section">
-                        <h3 class="form-section-title">Contact Information</h3>
+                        <h3 class="form-section-title">User Authentication</h3>
                         <div class="form-group">
-                            <label class="required">Your Full Name</label>
-                            <input type="text" class="form-input" id="fullName" required>
+                            <label class="required">Email/Username</label>
+                            <input type="text" class="form-input" id="userEmail" required 
+                                   placeholder="Enter your email or username">
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Password</label>
+                            <input type="password" class="form-input" id="userPassword" required 
+                                   placeholder="Enter your password">
                         </div>
                     </div>
 
@@ -103,7 +109,6 @@
                         <div class="form-group">
                             <label>Network Detection</label>
                             <div id="network-info-label">
-                                <!-- Network info will be displayed here -->
                                 <div style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; border: 1px solid #e9ecef; font-size: 0.9em;">
                                     <strong> Network Info:</strong> Detecting your IP and computer name...
                                 </div>
@@ -127,18 +132,123 @@
                 <!-- Loading State for Create Modal -->
                 <div id="create-loading" class="create-loading hidden">
                     <div class="loading-spinner"></div>
-                    <p>Submitting ticket and sending notification...</p>
+                    <p>Verifying credentials and submitting ticket...</p>
+                </div>
+
+                <!-- Error Message -->
+                <div id="auth-error" class="error-message hidden">
+                    <div class="error-icon">⚠️</div>
+                    <div class="error-text">
+                        <strong>User not found or invalid credentials.</strong><br>
+                        Please check your email/username and password, or contact your IT administrator.
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeCreateModal()" id="cancel-btn">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="createTicketFromForm()" id="submit-btn">
+                <button type="button" class="btn btn-primary" onclick="validateAndCreateTicket()" id="submit-btn">
                     Submit Ticket
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- View Ticket Modal -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ticket Details</h2>
+                <span class="close" onclick="closeViewModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label><strong>Ticket ID:</strong></label>
+                    <div id="view-id" class="view-field">-</div>
+                </div>
+                
+                <div class="form-group">
+                    <label><strong>Subject:</strong></label>
+                    <div id="view-subject" class="view-field">-</div>
+                </div>
+                
+                <div class="form-group">
+                    <label><strong>Requester:</strong></label>
+                    <div id="view-requester" class="view-field">-</div>
+                    <div id="view-requester-details" class="view-field-details"></div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><strong>Status:</strong></label>
+                        <div id="view-status" class="view-field">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label><strong>Priority:</strong></label>
+                        <div id="view-priority" class="view-field">-</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><strong>Assigned To:</strong></label>
+                    <div id="view-assigned" class="view-field">-</div>
+                </div>
+                
+                <div class="form-group">
+                    <label><strong>Description:</strong></label>
+                    <div id="view-description" class="view-field view-field-description">-</div>
+                </div>
+                
+                <!-- IT Comments Section -->
+                <div class="form-group">
+                    <label><strong>IT Comments:</strong></label>
+                    <div id="view-it-comment" class="view-field view-field-itcomment">
+                        No IT comments yet.
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><strong>Created Date:</strong></label>
+                        <div id="view-created" class="view-field">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label><strong>Last Updated:</strong></label>
+                        <div id="view-updated" class="view-field">-</div>
+                    </div>
+                </div>
+                
+                <div class="network-info-section">
+                    <h3>Network Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Public IP:</label>
+                            <div id="view-ip" class="view-field">-</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Private IP:</label>
+                            <div id="view-private-ip" class="view-field">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Computer Name:</label>
+                            <div id="view-computer" class="view-field">-</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Username:</label>
+                            <div id="view-username" class="view-field">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
     <div id="successModal" class="modal">
         <div class="modal-content" style="max-width: 400px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
             <div class="modal-header" style="background: #28a745; padding: 1rem; color: white;">
@@ -146,7 +256,6 @@
             </div>
             <div class="modal-body">
                 <div style="text-align: center; padding: 1rem;">
-                    <!-- Your custom meme image -->
                     <img src="./image/success.webp" alt="Success Meme" style="width: 100%; max-width: 300px; height: auto; margin-bottom: 1rem; border-radius: 4px;">
                     <p id="success-message" style="font-size: 1.1rem; color: #333;">Ticket created successfully!</p>
                 </div>

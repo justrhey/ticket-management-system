@@ -23,9 +23,12 @@ public class TicketService {
     @Autowired
     private EmailService emailService;
 
+    // Updated updateTicket method with closedTime
     public boolean updateTicket(Long ticketId, String fullName, String ticketStatus, String subject, 
                  LocalDateTime requestedTime, String intent, String assignedPerson, String priority,
-                 String clientIpAddress, String computerName, String userAgent, String itComment){
+                 String clientIpAddress, String computerName, String userAgent, String itComment,
+                 LocalDateTime closedTime) {
+        
         Optional<Ticket> existingTicket = ticketRepository.findById(ticketId); 
         if(existingTicket.isPresent()){
             Ticket ticket = existingTicket.get();
@@ -65,25 +68,25 @@ public class TicketService {
                 ticket.setItComment(itComment.trim());
             }
             
+            // Update closedTime if provided
+            if (closedTime != null) {
+                ticket.setClosedTime(closedTime);
+            }
+            
             ticketRepository.save(ticket);
             return true;
         }
         return false;
     }
 
-    public boolean registerTicket(String fullName, String ticketStatus, String subject, 
+    // Overloaded method for backward compatibility
+    public boolean updateTicket(Long ticketId, String fullName, String ticketStatus, String subject, 
                  LocalDateTime requestedTime, String intent, String assignedPerson, String priority,
-                 String clientIpAddress, String computerName, String userAgent, String itComment){
+                 String clientIpAddress, String computerName, String userAgent, String itComment) {
         
-        // Validate input
-        if(!validator.isValidFullName(fullName)){
-            return false;
-        }
-
-        // Create new ticket
-        Ticket newTicket = new Ticket(fullName, ticketStatus, subject, requestedTime, intent, assignedPerson, priority, clientIpAddress, computerName, userAgent, itComment);
-        ticketRepository.save(newTicket);
-        return true;
+        return updateTicket(ticketId, fullName, ticketStatus, subject, requestedTime, intent, 
+                          assignedPerson, priority, clientIpAddress, computerName, userAgent, 
+                          itComment, null);
     }
 
     public Optional<Ticket> findTicketById(Long ticketId){
@@ -94,7 +97,6 @@ public class TicketService {
         return ticketRepository.findAll();
     }
 
-    // FIXED: Renamed to avoid conflict
     public Page<Ticket> getAllTicketsPaginated(Pageable pageable){ 
         return ticketRepository.findAll(pageable);
     }
@@ -121,10 +123,10 @@ public class TicketService {
         Ticket newTicket = new Ticket();
         newTicket.setFullName(fullName);
         newTicket.setSubject(subject);
-        newTicket.setIntent(description); // Using 'intent' field for description
+        newTicket.setIntent(description);
         newTicket.setAssignedPerson(assignedPerson);
-        newTicket.setTicketStatus("Open");
-        newTicket.setRequestedTime(java.time.LocalDateTime.now());
+        newTicket.setTicketStatus("OPEN");
+        newTicket.setRequestedTime(LocalDateTime.now());
         newTicket.setPriority(priority);
         newTicket.setClientIpAddress(clientIpAddress);
         newTicket.setComputerName(computerName);
@@ -139,30 +141,8 @@ public class TicketService {
         return savedTicket;
     }
 
-    public List<Ticket> getFilteredTickets(List<String> status, String search) {
-        if ((status == null || status.isEmpty()) && (search == null || search.isEmpty())) {
-            return getAllTickets();
-        }
-        
-        // Implement basic filtering logic
-        List<Ticket> allTickets = getAllTickets();
-        
-        return allTickets.stream()
-            .filter(ticket -> {
-                boolean statusMatch = status == null || status.isEmpty() || 
-                                   status.contains(ticket.getTicketStatus());
-                boolean searchMatch = search == null || search.isEmpty() ||
-                                    containsSearchTerm(ticket, search);
-                return statusMatch && searchMatch;
-            })
-            .collect(Collectors.toList());
-    }
-    
-    private boolean containsSearchTerm(Ticket ticket, String search) {
-        String searchLower = search.toLowerCase();
-        return (ticket.getSubject() != null && ticket.getSubject().toLowerCase().contains(searchLower)) ||
-               (ticket.getFullName() != null && ticket.getFullName().toLowerCase().contains(searchLower)) ||
-               (ticket.getIntent() != null && ticket.getIntent().toLowerCase().contains(searchLower)) ||
-               (ticket.getAssignedPerson() != null && ticket.getAssignedPerson().toLowerCase().contains(searchLower));
+    // Method to save ticket
+    public Ticket saveTicket(Ticket ticket) {
+        return ticketRepository.save(ticket);
     }
 }

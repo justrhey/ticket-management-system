@@ -5,7 +5,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "ticket")
@@ -18,6 +17,8 @@ public class Ticket{
     private String ticketStatus; //status if already done ex. pending, done, in prog
     private String subject; // title of the concern
     private LocalDateTime requestedTime; // Date stamp
+    private LocalDateTime closedTime; // When ticket was closed
+    
     @Column(name = "intent", length = 2000)
     private String intent; //Purpose of the ticket
     private String assignedPerson; //Optional if employee neee specific people
@@ -92,6 +93,9 @@ public class Ticket{
         return requestedTime;
     }
     
+    public LocalDateTime getClosedTime(){
+        return closedTime;
+    }
 
     public String getAssignedPerson(){
         return assignedPerson;
@@ -128,6 +132,11 @@ public class Ticket{
 
     public void setTicketStatus(String ticketStatus){
         this.ticketStatus = ticketStatus;
+        
+        // Automatically set closed time when status is set to CLOSED
+        if ("CLOSED".equalsIgnoreCase(ticketStatus) && this.closedTime == null) {
+            this.closedTime = LocalDateTime.now();
+        }
     }
 
     public void setSubject(String subject){
@@ -138,7 +147,6 @@ public class Ticket{
         this.requestedTime = requestedTime;
     }
 
-
     public void setIntent(String intent){
         this.intent = intent;
     }
@@ -146,9 +154,12 @@ public class Ticket{
     public void setAssignedPerson(String assignedPerson){
         this.assignedPerson = assignedPerson;
     }
+    
+    public void setClosedTime(LocalDateTime closedTime){
+        this.closedTime = closedTime;
+    }
 
-
-//Parsing to String
+    //Parsing to String
     @Override
     public String toString() {
         return "Ticket{" +
@@ -157,15 +168,15 @@ public class Ticket{
                 ", ticketStatus='" + ticketStatus + '\'' +
                 ", subject='" + subject + '\'' +
                 ", requestedTime=" + requestedTime +
+                ", closedTime=" + closedTime +
                 ", intent='" + intent + '\'' +
                 ", assignedPerson='" + assignedPerson + '\'' +
                 ", priority='" + priority + '\'' +
                 ", clientIpAddress='" + clientIpAddress + '\'' +
                 ", computerName='" + computerName + '\'' +
                 ", userAgent='" + userAgent + '\'' +
+                ", itComment='" + itComment + '\'' +
                 '}';
 
     }
 }
-
-

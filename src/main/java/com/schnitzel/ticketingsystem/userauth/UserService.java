@@ -1,115 +1,80 @@
 package com.schnitzel.ticketingsystem.userauth;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class UserService {
-    
+
     @Autowired
     private UserRepository userRepository;
-    
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    
-    // Login validation method with BCrypt
-    public boolean validateUser(String email, String password) {
+
+    // Simple login validation - plain text comparison
+    public boolean validateUser(String email, String rawPassword) {
+        System.out.println("=== VALIDATING USER ===");
+        System.out.println("Email: " + email);
+        System.out.println("Password: " + rawPassword);
+        
         Optional<User> userOpt = userRepository.findByEmail(email);
+        
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            // Use BCrypt to check the password
-            return passwordEncoder.matches(password, user.getPassword());
+            System.out.println("User found: " + user.getEmail());
+            System.out.println("Stored password: " + user.getPassword());
+            
+            boolean matches = rawPassword.equals(user.getPassword());
+            System.out.println("Password matches: " + matches);
+            return matches;
+        } else {
+            System.out.println("User not found");
+            return false;
         }
-        return false;
     }
-    
-    // Find user by email
+
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
-    
-    // Enhanced createUser method with password encoding
-    public User createUser(User user) {
-        // Hash the password before saving
-        String hashedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(hashedPassword);
+
+    // Create user - store plain text password
+    public User createUser(String email, String rawPassword, String fullName, String position, UserRole role) {
+        User user = new User(email, rawPassword, fullName, position, role);
         return userRepository.save(user);
     }
-    
-    // Method to update password with hashing
-    public User updatePassword(Long userId, String newPassword) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            String hashedPassword = passwordEncoder.encode(newPassword);
-            user.setPassword(hashedPassword);
-            return userRepository.save(user);
-        }
-        return null;
-    }
-    
-    // Method to register a new user with password hashing
-    public User registerUser(String email, String password, String fullName, String position, UserRole role) {
-        if (userRepository.existsByEmail(email)) {
-            throw new RuntimeException("User with this email already exists");
-        }
-        
-        String hashedPassword = passwordEncoder.encode(password);
-        User newUser = new User(email, hashedPassword, fullName, position, role);
-        return userRepository.save(newUser);
-    }
-    
-    // Check if raw password matches the hashed one
-    public boolean checkPassword(String rawPassword, String hashedPassword) {
-        return passwordEncoder.matches(rawPassword, hashedPassword);
-    }
-    
-    // Hash a raw password (useful for admin resetting passwords)
-    public String hashPassword(String rawPassword) {
-        return passwordEncoder.encode(rawPassword);
-    }
-    
-    // Your existing methods
+
+    // Get all users
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
-    
+
+    // Search users
     public List<User> searchUsers(String query) {
-        if (query == null || query.trim().isEmpty()) {
-            return userRepository.findAll();
-        }
-        return userRepository.searchUsers(query.trim());
+        return userRepository.searchUsers(query);
     }
-    
+
+    // Get user by ID
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
     }
-    
-    public Optional<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+
+    // Update user - plain text password
+    public User updateUser(Long id, User updatedUser) {
+        return userRepository.findById(id)
+                .map(user -> {
+                    user.setEmail(updatedUser.getEmail());
+                    if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
+                        user.setPassword(updatedUser.getPassword()); // Store plain text
+                    }
+                    user.setFullName(updatedUser.getFullName());
+                    user.setPosition(updatedUser.getPosition());
+                    user.setRole(updatedUser.getRole());
+                    return userRepository.save(user);
+                }).orElseThrow(() -> new RuntimeException("User not found"));
     }
-    
-    public User updateUser(Long id, User userDetails) {
-        Optional<User> userOptional = userRepository.findById(id);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            user.setFullName(userDetails.getFullName());
-            user.setEmail(userDetails.getEmail());
-            user.setPosition(userDetails.getPosition());
-            user.setRole(userDetails.getRole());
-            // Note: Password is not updated here - use updatePassword method instead
-            return userRepository.save(user);
-        }
-        return null;
-    }
-    
+
+    // Delete user
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
-    }
-    
-    public boolean userExists(String email) {
-        return userRepository.existsByEmail(email);
     }
 }

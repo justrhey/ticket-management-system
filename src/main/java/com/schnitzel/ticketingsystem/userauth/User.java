@@ -22,8 +22,9 @@ public class User {
     private String position;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 50)
+    @Column(name = "user_role", nullable = false, length = 50)
     private UserRole role = UserRole.USER;
+
     
     // Constructors
     public User() {}

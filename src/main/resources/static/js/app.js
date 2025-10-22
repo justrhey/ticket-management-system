@@ -1,5 +1,5 @@
-// Use relative path or dynamic origin instead of hardcoded localhost
 const API_BASE = '/api/tickets';
+const AUTH_API = '/api/users/validate'; // New endpoint for user validation
 let allTickets = [];
 let selectedSubject = '';
 
@@ -17,33 +17,22 @@ let clientNetworkInfo = {
 document.addEventListener('DOMContentLoaded', function() {
     loadTickets();
     initializeEventListeners();
-    initializeEnhancedNetworkInfo(); // Initialize enhanced network information
+    initializeEnhancedNetworkInfo();
 });
 
-// Initialize enhanced network information with private IP detection
+// Initialize enhanced network information
 async function initializeEnhancedNetworkInfo() {
     try {
         console.log('=== ENHANCED NETWORK INFO INITIALIZATION ===');
         
-        // Get basic info
         clientNetworkInfo.userAgent = navigator.userAgent;
-        
-        // Get public IP
         await getPublicIP();
-        
-        // Get private IP using WebRTC
         await getPrivateIP();
-        
-        // Generate device ID
         clientNetworkInfo.deviceId = generateDeviceId();
-        
-        // Get backend-detected information (computer name and username)
         await getBackendNetworkInfo();
         
         console.log('Final Network Info:', clientNetworkInfo);
         localStorage.setItem('clientNetworkInfo', JSON.stringify(clientNetworkInfo));
-        
-        // Update the network info label
         updateNetworkInfoLabel();
         
     } catch (error) {
@@ -51,7 +40,7 @@ async function initializeEnhancedNetworkInfo() {
     }
 }
 
-// Get backend-detected network information (COMPUTER NAME & USERNAME)
+// Get backend-detected network information
 async function getBackendNetworkInfo() {
     try {
         console.log('Fetching backend network info...');
@@ -61,31 +50,23 @@ async function getBackendNetworkInfo() {
             const backendInfo = await response.json();
             console.log('Backend network info received:', backendInfo);
             
-            // Use backend-detected computer name
             if (backendInfo.computerName && 
                 backendInfo.computerName !== 'Unknown-Host' && 
                 backendInfo.computerName !== 'localhost') {
                 clientNetworkInfo.hostname = backendInfo.computerName;
-                console.log('✓ Computer name from backend:', backendInfo.computerName);
             } else {
-                // Try to get from browser
                 clientNetworkInfo.hostname = await getBrowserComputerName();
-                console.log('✓ Computer name from browser:', clientNetworkInfo.hostname);
             }
             
-            // Use backend-detected username if available
             if (backendInfo.userName && 
                 backendInfo.userName !== 'Unknown-User' &&
                 backendInfo.userName !== 'Netscape') {
                 clientNetworkInfo.username = backendInfo.userName;
-                console.log('✓ Username from backend:', backendInfo.userName);
             } else {
-                // Fallback to asking user or using browser info
                 clientNetworkInfo.username = await getClientUsername();
             }
             
         } else {
-            console.log('Backend network info not available, using fallback');
             clientNetworkInfo.hostname = await getBrowserComputerName();
             clientNetworkInfo.username = await getClientUsername();
         }
@@ -96,22 +77,18 @@ async function getBackendNetworkInfo() {
     }
 }
 
-// Get computer name from browser (tries multiple methods)
+// Get computer name from browser
 async function getBrowserComputerName() {
-    // Method 1: Check if previously stored
     const stored = localStorage.getItem('computerName');
     if (stored && stored !== 'Unknown' && stored !== 'localhost') {
-        console.log('Using stored computer name:', stored);
         return stored;
     }
     
-    // Method 2: Try to get from hostname
     const hostname = window.location.hostname;
     if (hostname && hostname !== 'localhost' && !hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) {
         return hostname;
     }
     
-    // Method 3: Prompt user to enter their computer name (one-time)
     const computerName = prompt(
         'Please enter your computer name for ticket tracking:\n\n' +
         'Windows: Press Win+R, type "cmd", then type "hostname"\n' +
@@ -132,20 +109,17 @@ async function getPublicIP() {
     const ipMethods = [
         () => fetch('https://api.ipify.org?format=json').then(r => r.json()),
         () => fetch('https://api64.ipify.org?format=json').then(r => r.json()),
-        () => fetch('https://jsonip.com').then(r => r.json()),
     ];
     
     for (const method of ipMethods) {
         try {
             const result = await method();
-            const ip = result.ip || result.ipAddress;
+            const ip = result.ip;
             if (ip && ip !== 'Unknown' && !ip.includes('127.0.0.1') && !ip.includes('::1')) {
                 clientNetworkInfo.publicIpAddress = ip;
-                console.log('Public IP detected:', ip);
                 return;
             }
         } catch (error) {
-            console.log('Public IP method failed:', error.message);
             continue;
         }
     }
@@ -153,124 +127,75 @@ async function getPublicIP() {
     clientNetworkInfo.publicIpAddress = 'Unknown';
 }
 
-// Get private IP using WebRTC (improved version)
+// Get private IP using WebRTC
 async function getPrivateIP() {
     return new Promise((resolve) => {
         const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
         
         if (!RTCPeerConnection) {
-            console.log('WebRTC not supported');
             clientNetworkInfo.privateIpAddress = 'WebRTC-Not-Supported';
             resolve();
             return;
         }
 
         try {
-            // Use multiple STUN servers to improve detection
             const pc = new RTCPeerConnection({
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                    { urls: 'stun:stun2.l.google.com:19302' }
+                    { urls: 'stun:stun1.l.google.com:19302' }
                 ]
             });
             
             let privateIPs = new Set();
-            let candidateCount = 0;
             
             pc.onicecandidate = (event) => {
-                candidateCount++;
-                
                 if (!event || !event.candidate) {
-                    // ICE gathering complete
-                    console.log(`ICE gathering complete. Found ${candidateCount} candidates.`);
-                    
                     if (privateIPs.size > 0) {
-                        // Convert Set to Array and pick the first valid private IP
                         const ipArray = Array.from(privateIPs);
                         clientNetworkInfo.privateIpAddress = ipArray[0];
-                        console.log('✓ Private IP detected via WebRTC:', ipArray);
                     } else {
-                        console.log('No private IP found in candidates');
                         clientNetworkInfo.privateIpAddress = 'No-Local-IP-Found';
                     }
-                    
                     pc.close();
                     resolve();
                     return;
                 }
                 
                 const candidate = event.candidate.candidate;
-                console.log('ICE candidate:', candidate);
-                
-                // Extract IP address from candidate string
-                // Format: "candidate:... typ host" contains the local IP
                 const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})/g;
                 const matches = candidate.match(ipRegex);
                 
                 if (matches) {
                     matches.forEach(ip => {
-                        // Filter out invalid IPs
                         if (ip !== '0.0.0.0' && !ip.startsWith('127.') && isPrivateIP(ip)) {
                             privateIPs.add(ip);
-                            console.log('Found private IP:', ip);
-                        }
-                    });
-                }
-                
-                // Also try to extract IPv6
-                const ipv6Regex = /([0-9a-f]{1,4}(:[0-9a-f]{1,4}){7})/gi;
-                const ipv6Matches = candidate.match(ipv6Regex);
-                if (ipv6Matches) {
-                    ipv6Matches.forEach(ip => {
-                        if (isPrivateIP(ip)) {
-                            privateIPs.add(ip);
-                            console.log('Found private IPv6:', ip);
                         }
                     });
                 }
             };
 
-            pc.onicegatheringstatechange = () => {
-                console.log('ICE gathering state:', pc.iceGatheringState);
-            };
-
-            // Create a data channel to trigger ICE candidate gathering
             pc.createDataChannel('');
             
-            // Create offer
             pc.createOffer()
-                .then(offer => {
-                    console.log('WebRTC offer created');
-                    return pc.setLocalDescription(offer);
-                })
+                .then(offer => pc.setLocalDescription(offer))
                 .catch(error => {
-                    console.log('WebRTC offer error:', error);
                     clientNetworkInfo.privateIpAddress = 'WebRTC-Error';
                     pc.close();
                     resolve();
                 });
 
-            // Timeout after 5 seconds
             setTimeout(() => {
-                console.log('WebRTC detection timeout');
                 if (privateIPs.size > 0) {
                     const ipArray = Array.from(privateIPs);
                     clientNetworkInfo.privateIpAddress = ipArray[0];
-                    console.log('✓ Private IP from timeout:', ipArray);
                 } else {
                     clientNetworkInfo.privateIpAddress = 'Detection-Timeout';
                 }
-                try {
-                    pc.close();
-                } catch (e) {
-                    console.log('Error closing peer connection:', e);
-                }
+                try { pc.close(); } catch (e) {}
                 resolve();
             }, 5000);
             
         } catch (error) {
-            console.error('WebRTC setup error:', error);
             clientNetworkInfo.privateIpAddress = 'WebRTC-Setup-Error';
             resolve();
         }
@@ -281,7 +206,6 @@ async function getPrivateIP() {
 function isPrivateIP(ip) {
     if (!ip) return false;
     
-    // IPv4 private ranges
     if (ip.includes('.')) {
         if (ip.startsWith('10.')) return true;
         if (ip.startsWith('192.168.')) return true;
@@ -294,11 +218,6 @@ function isPrivateIP(ip) {
         }
         if (ip.startsWith('127.')) return true;
         if (ip.startsWith('169.254.')) return true;
-    }
-    
-    // IPv6 private ranges
-    if (ip.includes(':')) {
-        if (ip.startsWith('fc') || ip.startsWith('fd') || ip.startsWith('fe80')) return true;
     }
     
     return false;
@@ -323,27 +242,21 @@ function generateDeviceId() {
     return 'device_' + Math.abs(hash).toString(16);
 }
 
-// Try to get client username (fallback method)
+// Get client username
 async function getClientUsername() {
-    // Check if we have stored username
     const stored = localStorage.getItem('clientUsername');
     if (stored && stored !== 'Unknown' && stored !== 'Unknown-User' && stored !== 'Netscape') {
-        console.log('Using stored username:', stored);
         return stored;
     }
     
-    // Prompt user for username (one-time setup)
-    const userName = prompt('Please enter your name for ticket tracking:\n(This will be saved for future tickets)');
+    const userName = prompt('Please enter your name for ticket tracking:');
     
     if (userName && userName.trim().length > 0) {
         const cleanUsername = userName.trim();
         localStorage.setItem('clientUsername', cleanUsername);
-        clientNetworkInfo.username = cleanUsername;
-        console.log('Username saved:', cleanUsername);
         return cleanUsername;
     }
     
-    clientNetworkInfo.username = 'Unknown-User';
     return 'Unknown-User';
 }
 
@@ -375,7 +288,6 @@ function updateNetworkInfoLabel() {
 }
 
 function initializeEventListeners() {
-    // Search functionality
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('keypress', function(e) {
@@ -389,20 +301,19 @@ function initializeEventListeners() {
 // Modal functions
 function openCreateModal() {
     document.getElementById('createModal').style.display = 'block';
-    // Ensure network info is updated when modal opens
+    hideAuthError();
     updateNetworkInfoLabel();
 }
 
 function closeCreateModal() {
     document.getElementById('createModal').style.display = 'none';
     document.getElementById('createForm').reset();
-    // Reset subject selection
     document.querySelectorAll('.category-option').forEach(option => {
         option.classList.remove('selected');
     });
     selectedSubject = '';
-    // Reset loading state
     hideCreateLoading();
+    hideAuthError();
 }
 
 // Category selection
@@ -428,42 +339,98 @@ window.onclick = function(event) {
     }
 }
 
-// Form submission with loading state
-async function createTicketFromForm() {
-    const fullName = document.getElementById('fullName').value;
+async function validateAndCreateTicket() {
+    const userEmail = document.getElementById('userEmail').value;
+    const userPassword = document.getElementById('userPassword').value;
     const intent = document.getElementById('intent').value;
     const priority = document.getElementById('priority').value;
     const assignedPerson = document.getElementById('assignedPerson').value;
 
     // Validate required fields
-    if (!fullName || !selectedSubject || !intent || !priority) {
-        showNotification('Please fill in all required fields and select a subject.');
+    if (!userEmail || !userPassword || !selectedSubject || !intent || !priority) {
+        showNotification('Please fill in all required fields.');
         return;
     }
 
-    // Get enhanced network information
-    const networkInfo = getNetworkInfo();
-
-    const ticketData = {
-        fullName: fullName,
-        subject: selectedSubject,
-        intent: intent,
-        priority: priority,
-        assignedPerson: assignedPerson || '',
-        clientIpAddress: networkInfo.publicIpAddress,
-        privateIpAddress: networkInfo.privateIpAddress,
-        computerName: networkInfo.hostname,
-        userName: networkInfo.username,
-        userAgent: networkInfo.userAgent,
-        deviceId: networkInfo.deviceId
-    };
-
-    console.log('Submitting ticket with enhanced network info:', ticketData);
-
     // Show loading state
     showCreateLoading();
-    
-    await createTicket(ticketData);
+    hideAuthError();
+
+    try {
+        // First validate user credentials
+        console.log('Validating user credentials...');
+        const isValidUser = await validateUserCredentials(userEmail, userPassword);
+        
+        if (!isValidUser) {
+            hideCreateLoading();
+            showAuthError();
+            return;
+        }
+
+        // If credentials are valid, proceed with ticket creation
+        const networkInfo = getNetworkInfo();
+
+        const ticketData = {
+            fullName: userEmail,  // Use email as fullName
+            subject: selectedSubject,
+            intent: intent,
+            priority: priority,
+            assignedPerson: assignedPerson || '',
+            clientIpAddress: networkInfo.publicIpAddress,
+            privateIpAddress: networkInfo.privateIpAddress,
+            computerName: networkInfo.hostname,
+            userName: networkInfo.username,
+            userAgent: networkInfo.userAgent,
+            deviceId: networkInfo.deviceId
+        };
+
+        console.log('User validated. Submitting ticket...', ticketData);
+        await createTicket(ticketData);
+        
+    } catch (error) {
+        console.error('Error during validation or ticket creation:', error);
+        hideCreateLoading();
+        showNotification('Error processing your request. Please try again.');
+    }
+}
+
+// NEW: Validate user credentials with backend
+async function validateUserCredentials(email, password) {
+    try {
+        const response = await fetch(AUTH_API, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Authentication failed');
+        }
+
+        const result = await response.json();
+        return result.valid === true;
+        
+    } catch (error) {
+        console.error('Error validating user:', error);
+        return false;
+    }
+}
+
+// NEW: Show authentication error
+function showAuthError() {
+    const errorElement = document.getElementById('auth-error');
+    errorElement.classList.remove('hidden');
+}
+
+// NEW: Hide authentication error
+function hideAuthError() {
+    const errorElement = document.getElementById('auth-error');
+    errorElement.classList.add('hidden');
 }
 
 // Show loading state in create modal
@@ -472,14 +439,9 @@ function showCreateLoading() {
     const cancelBtn = document.getElementById('cancel-btn');
     const loadingElement = document.getElementById('create-loading');
     
-    // Disable buttons
     submitBtn.disabled = true;
     cancelBtn.disabled = true;
-    
-    // Change button text
-    submitBtn.innerHTML = '<div class="button-spinner"></div> Submitting...';
-    
-    // Show loading message
+    submitBtn.innerHTML = '<div class="button-spinner"></div> Verifying...';
     loadingElement.classList.remove('hidden');
 }
 
@@ -489,14 +451,9 @@ function hideCreateLoading() {
     const cancelBtn = document.getElementById('cancel-btn');
     const loadingElement = document.getElementById('create-loading');
     
-    // Enable buttons
     submitBtn.disabled = false;
     cancelBtn.disabled = false;
-    
-    // Reset button text
     submitBtn.textContent = 'Submit Ticket';
-    
-    // Hide loading message
     loadingElement.classList.add('hidden');
 }
 
@@ -552,7 +509,6 @@ function displayTickets(tickets) {
         const ticketElement = document.createElement('div');
         ticketElement.className = 'ticket-item';
         
-        // Enhanced display with private IP if available
         const networkInfo = [];
         if (ticket.clientIpAddress && ticket.clientIpAddress !== 'Unknown') {
             networkInfo.push(`Public IP: ${ticket.clientIpAddress}`);
@@ -577,7 +533,7 @@ function displayTickets(tickets) {
                 <div style="font-size: 0.9em; color: #666;">${escapeHtml(ticket.intent || 'No description')}</div>
                 ${networkInfoText}
             </div>
-            <div>${escapeHtml(ticket.fullName)}</div>
+            <div>${escapeHtml(ticket.fullName)}</div>  <!-- This now shows the email -->
             <div class="status-badge status-${(ticket.ticketStatus || 'OPEN').toLowerCase()}">${ticket.ticketStatus || 'OPEN'}</div>
             <div class="priority-badge priority-${(ticket.priority || 'MEDIUM').toLowerCase()}">${ticket.priority || 'MEDIUM'}</div>
             <div>${formatDate(ticket.requestedTime)}</div>
@@ -604,11 +560,9 @@ async function createTicket(ticketData) {
         const result = await response.text();
         console.log('Ticket creation result:', result);
         
-        // Hide loading and show success
         hideCreateLoading();
         showSuccessModal('Ticket created successfully! IT team has been notified.');
         
-        // Refresh the ticket list after a short delay
         setTimeout(() => {
             loadTickets();
         }, 1000);
@@ -633,67 +587,148 @@ async function searchTickets() {
             const tickets = await response.json();
             displayTickets(tickets);
         } else {
-            // Fallback to client-side search
             const filteredTickets = allTickets.filter(ticket => 
                 (ticket.subject && ticket.subject.toLowerCase().includes(query.toLowerCase())) ||
-                (ticket.fullName && ticket.fullName.toLowerCase().includes(query.toLowerCase())) ||
+                (ticket.userEmail && ticket.userEmail.toLowerCase().includes(query.toLowerCase())) ||
                 (ticket.intent && ticket.intent.toLowerCase().includes(query.toLowerCase())) ||
-                (ticket.priority && ticket.priority.toLowerCase().includes(query.toLowerCase())) ||
-                (ticket.assignedPerson && ticket.assignedPerson.toLowerCase().includes(query.toLowerCase())) ||
-                (ticket.clientIpAddress && ticket.clientIpAddress.toLowerCase().includes(query.toLowerCase())) ||
-                (ticket.privateIpAddress && ticket.privateIpAddress.toLowerCase().includes(query.toLowerCase())) ||
-                (ticket.computerName && ticket.computerName.toLowerCase().includes(query.toLowerCase())) ||
-                (ticket.userName && ticket.userName.toLowerCase().includes(query.toLowerCase()))
+                (ticket.priority && ticket.priority.toLowerCase().includes(query.toLowerCase()))
             );
             displayTickets(filteredTickets);
         }
     } catch (error) {
         console.error('Error searching tickets:', error);
-        // Fallback to client-side search
         const filteredTickets = allTickets.filter(ticket => 
             (ticket.subject && ticket.subject.toLowerCase().includes(query.toLowerCase())) ||
-            (ticket.fullName && ticket.fullName.toLowerCase().includes(query.toLowerCase())) ||
+            (ticket.userEmail && ticket.userEmail.toLowerCase().includes(query.toLowerCase())) ||
             (ticket.intent && ticket.intent.toLowerCase().includes(query.toLowerCase())) ||
-            (ticket.priority && ticket.priority.toLowerCase().includes(query.toLowerCase())) ||
-            (ticket.assignedPerson && ticket.assignedPerson.toLowerCase().includes(query.toLowerCase())) ||
-            (ticket.clientIpAddress && ticket.clientIpAddress.toLowerCase().includes(query.toLowerCase())) ||
-            (ticket.privateIpAddress && ticket.privateIpAddress.toLowerCase().includes(query.toLowerCase())) ||
-            (ticket.computerName && ticket.computerName.toLowerCase().includes(query.toLowerCase())) ||
-            (ticket.userName && ticket.userName.toLowerCase().includes(query.toLowerCase()))
+            (ticket.priority && ticket.priority.toLowerCase().includes(query.toLowerCase()))
         );
         displayTickets(filteredTickets);
     }
 }
 
-function viewTicketDetails(ticket) {
-    const createdDate = ticket.requestedTime ? new Date(ticket.requestedTime).toLocaleString() : 'Unknown';
-    const priority = ticket.priority || 'Not specified';
+function viewTicket(ticketId){
+    console.log('View Ticket clicked ' + ticketId);
     
-    let details = `Ticket Details:\n\nID: #${ticket.ticketId}\nSubject: ${ticket.subject}\nRequester: ${ticket.fullName}\nStatus: ${ticket.ticketStatus}\nPriority: ${priority}\nDescription: ${ticket.intent}\nAssigned To: ${ticket.assignedPerson || 'Not assigned'}\nCreated: ${createdDate}`;
-    
-    // Add enhanced network information if available
-    const networkInfo = [];
-    if (ticket.clientIpAddress && ticket.clientIpAddress !== 'Unknown') {
-        networkInfo.push(`Public IP: ${ticket.clientIpAddress}`);
-    }
-    if (ticket.privateIpAddress && ticket.privateIpAddress !== 'Unknown') {
-        networkInfo.push(`Private IP: ${ticket.privateIpAddress}`);
-    }
-    if (ticket.computerName && ticket.computerName !== 'Unknown') {
-        networkInfo.push(`Computer: ${ticket.computerName}`);
-    }
-    if (ticket.userName && ticket.userName !== 'Unknown') {
-        networkInfo.push(`User: ${ticket.userName}`);
-    }
-    if (ticket.deviceId && ticket.deviceId !== 'Unknown') {
-        networkInfo.push(`Device ID: ${ticket.deviceId}`);
+    if (!ticketId) {
+        console.error('No ticket ID provided to view');
+        return;
     }
     
-    if (networkInfo.length > 0) {
-        details += `\n\nNetwork Information:\n${networkInfo.join('\n')}`;
+    const ticket = allTickets.find(t => t.ticketId === ticketId);
+    console.log('Found Ticket:', ticket);
+    
+    if (!ticket) {
+        console.error('Ticket not found: ' + ticketId);
+        console.log('Available Ticket IDs:', allTickets.map(t => t.ticketId));
+        showNotification('Error', 'Ticket not found', 'error');
+        return;
+    }
+
+    const viewId = document.getElementById('view-id');
+    const viewSubject = document.getElementById('view-subject');
+    const viewRequester = document.getElementById('view-requester');
+    const viewRequesterDetails = document.getElementById('view-requester-details');
+    const viewStatus = document.getElementById('view-status');
+    const viewPriority = document.getElementById('view-priority');
+    const viewAssigned = document.getElementById('view-assigned');
+    const viewCreated = document.getElementById('view-created');
+    const viewDescription = document.getElementById('view-description');
+    const viewIp = document.getElementById('view-ip');
+    const viewPrivateIp = document.getElementById('view-private-ip');
+    const viewComputer = document.getElementById('view-computer');
+    const viewUseragent = document.getElementById('view-useragent');
+    const viewItComment = document.getElementById('view-it-comment');
+    const viewUsername = document.getElementById('view-username');
+    const viewDeviceId = document.getElementById('view-device-id');
+    const viewUpdated = document.getElementById('view-updated');
+    const viewOpenedTime = document.getElementById('view-opened-time');
+    const viewClosedTime = document.getElementById('view-closed-time');
+    const viewResolutionTime = document.getElementById('view-resolution-time');
+    const viewResolutionTimeContainer = document.getElementById('view-resolution-time-container');
+
+    if (viewUpdated) viewUpdated.textContent = formatDateTime(ticket.updatedTime || ticket.requestedTime);
+    if (viewOpenedTime) viewOpenedTime.textContent = formatDateTime(ticket.openedTime || ticket.requestedTime);
+    if (viewClosedTime) viewClosedTime.textContent = ticket.closedTime ? formatDateTime(ticket.closedTime) : 'Not closed yet';
+    
+    // Calculate and display resolution time
+    if (ticket.resolvedTime && ticket.openedTime) {
+        const resolutionTime = calculateTimeDifference(ticket.openedTime, ticket.resolvedTime);
+        if (viewResolutionTime) viewResolutionTime.textContent = resolutionTime;
+        if (viewResolutionTimeContainer) viewResolutionTimeContainer.style.display = 'block';
+    } else {
+        if (viewResolutionTimeContainer) viewResolutionTimeContainer.style.display = 'none';
+    }
+
+    if (viewId) viewId.textContent = '#' + ticket.ticketId;
+    if (viewSubject) viewSubject.textContent = ticket.subject || 'No subject';
+    
+    const accountName = ticket.fullName || ticket.userName || 'Unknown User';
+    const userEmail = ticket.userEmail || 'No email';
+    const userPosition = ticket.userPosition || 'No position';
+    
+    if (viewRequester) viewRequester.textContent = accountName;
+    if (viewRequesterDetails) {
+        viewRequesterDetails.innerHTML = `
+            <strong>Email:</strong> ${escapeHtml(userEmail)}<br>
+            <strong>Position:</strong> ${escapeHtml(userPosition)}
+        `;
     }
     
-    alert(details);
+    if (viewStatus) {
+        const status = ticket.ticketStatus || 'OPEN';
+        viewStatus.innerHTML = '<span class="status-badge status-' + status.toLowerCase() + '">' + status + '</span>';
+    }
+    
+    if (viewPriority) {
+        const priority = ticket.priority || 'MEDIUM';
+        viewPriority.innerHTML = '<span class="priority-badge priority-' + priority.toLowerCase() + '">' + priority + '</span>';
+    }
+    
+    if (viewAssigned) viewAssigned.textContent = ticket.assignedPerson || 'Not assigned';
+    if (viewCreated) viewCreated.textContent = formatDateTime(ticket.requestedTime);
+    if (viewDescription) viewDescription.textContent = ticket.intent || 'No description provided';
+    if (viewIp) viewIp.textContent = ticket.clientIpAddress || 'Unknown';
+    if (viewPrivateIp) viewPrivateIp.textContent = ticket.privateIpAddress || 'Unknown';
+    if (viewComputer) viewComputer.textContent = ticket.computerName || 'Unknown';
+    if (viewUseragent) viewUseragent.textContent = ticket.userAgent || 'Unknown';
+    if (viewUsername) viewUsername.textContent = accountName;
+    if (viewDeviceId) viewDeviceId.textContent = ticket.deviceId || 'Unknown';
+
+    // IT Comment display - READ ONLY
+    if (viewItComment) {
+        const itComment = ticket.itComment || 'No IT comments yet.';
+        viewItComment.textContent = itComment;
+        
+        // Enhanced styling for IT comments section
+        if (itComment && itComment !== 'No IT comments yet.' && itComment.trim() !== '') {
+            viewItComment.style.background = '#f8f9fa';
+            viewItComment.style.padding = '12px';
+            viewItComment.style.borderRadius = '4px';
+            viewItComment.style.borderLeft = '4px solid #0041d8';
+            viewItComment.style.whiteSpace = 'pre-wrap';
+            viewItComment.style.wordWrap = 'break-word';
+            viewItComment.style.minHeight = '60px';
+            viewItComment.style.fontFamily = 'monospace';
+            viewItComment.style.fontSize = '0.9em';
+            viewItComment.style.border = '1px solid #dee2e6';
+        } else {
+            viewItComment.style.background = '#f5f5f5';
+            viewItComment.style.padding = '12px';
+            viewItComment.style.borderRadius = '4px';
+            viewItComment.style.borderLeft = '4px solid #6c757d';
+            viewItComment.style.color = '#6c757d';
+            viewItComment.style.fontStyle = 'italic';
+            viewItComment.style.border = '1px dashed #dee2e6';
+        }
+        
+        // Ensure it's not editable
+        viewItComment.readOnly = true;
+        viewItComment.style.cursor = 'default';
+        viewItComment.style.userSelect = 'text'; // Allow text selection for reading
+    }
+
+    openViewModal();
 }
 
 function formatDate(dateString) {
@@ -724,8 +759,8 @@ function showNotification(message) {
 window.openCreateModal = openCreateModal;
 window.closeCreateModal = closeCreateModal;
 window.selectCategory = selectCategory;
-window.createTicketFromForm = createTicketFromForm;
+window.validateAndCreateTicket = validateAndCreateTicket;
 window.closeSuccessModal = closeSuccessModal;
 window.searchTickets = searchTickets;
 
-console.log('Enhanced ticket creation system with backend network detection initialized successfully');
+console.log('Ticket creation system with user authentication initialized successfully');

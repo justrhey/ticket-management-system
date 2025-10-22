@@ -147,6 +147,7 @@
                                 <th class="status-column">Status</th>
                                 <th class="priority-column">Priority</th>
                                 <th class="assignee-column">Assignee</th>
+                                <th class="requester-column">Requester</th>
                                 <th class="date-column">Created</th>
                                 <th class="actions-column">Actions</th>
                             </tr>
@@ -280,93 +281,116 @@
         </div>
     </div>
 
-    <!-- View Ticket Modal -->
-    <div id="viewModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Ticket Details</h2>
-                <span class="close" onclick="closeViewModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="ticket-details">
-                    <div class="detail-row">
-                        <label>Ticket ID:</label>
-                        <span id="view-id"></span>
-                    </div>
-                    <div class="detail-row">
-                        <label>Subject:</label>
-                        <span id="view-subject"></span>
-                    </div>
-                    <div class="detail-row">
-                        <label>Requester:</label>
-                        <span id="view-requester"></span>
-                    </div>
-                    <div class="detail-row">
-                        <label>Status:</label>
-                        <span id="view-status"></span>
-                    </div>
-                    <div class="detail-row">
-                        <label>Priority:</label>
-                        <span id="view-priority"></span>
-                    </div>
-                    <div class="detail-row">
-                        <label>Assigned To:</label>
-                        <span id="view-assigned"></span>
-                    </div>
-                    <div class="detail-row">
-                        <label>Created:</label>
-                        <span id="view-created"></span>
-                    </div>
-                    
-                    <!-- Network Information Section -->
-                    <div class="detail-row full-width">
-                        <label>Network Information:</label>
-                        <div class="network-info-section">
-                            <div class="network-info-item">
-                                <span class="network-info-label">IP Address:</span>
-                                <span id="view-ip">Unknown</span>
-                            </div>
-                            <div class="network-info-item">
-                                <span class="network-info-label">Computer Name:</span>
-                                <span id="view-computer">Unknown</span>
-                            </div>
-                            <div class="network-info-item">
-                                <span class="network-info-label">User Agent:</span>
-                                <span id="view-useragent">Unknown</span>
-                            </div>
-                            <div class="network-info-item">
-                                <span class="network-info-label">Private IP:</span>
-                                <span id="view-private-ip">Unknown</span>
-                            </div>
-                            <div class="network-info-item">
-                                <span class="network-info-label">Username:</span>
-                                <span id="view-username">Unknown</span>
-                            </div>
-                            <div class="network-info-item">
-                                <span class="network-info-label">Device ID:</span>
-                                <span id="view-device-id">Unknown</span>
-                            </div>
+<!-- View Ticket Modal - Updated with Timestamps -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Ticket Details</h2>
+            <span class="close" onclick="closeViewModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="ticket-details">
+                <div class="detail-row">
+                    <label>Ticket ID:</label>
+                    <span id="view-id"></span>
+                </div>
+                <div class="detail-row">
+                    <label>Subject:</label>
+                    <span id="view-subject"></span>
+                </div>
+                <div class="detail-row">
+                    <label>Requester:</label>
+                    <span id="view-requester"></span>
+                </div>
+                <div class="detail-row">
+                    <label>Status:</label>
+                    <span id="view-status"></span>
+                </div>
+                <div class="detail-row">
+                    <label>Priority:</label>
+                    <span id="view-priority"></span>
+                </div>
+                <div class="detail-row">
+                    <label>Assigned To:</label>
+                    <span id="view-assigned"></span>
+                </div>
+                
+                <!-- Timestamps Section -->
+                <div class="detail-row full-width">
+                    <label>Timestamps:</label>
+                    <div class="timestamps-section">
+                        <div class="timestamp-item">
+                            <span class="timestamp-label">Created:</span>
+                            <span id="view-created">Unknown</span>
+                        </div>
+                        <div class="timestamp-item">
+                            <span class="timestamp-label">Last Updated:</span>
+                            <span id="view-updated">Unknown</span>
+                        </div>
+                        <div class="timestamp-item">
+                            <span class="timestamp-label">Opened:</span>
+                            <span id="view-opened-time">Unknown</span>
+                        </div>
+                        <div class="timestamp-item">
+                            <span class="timestamp-label">Closed:</span>
+                            <span id="view-closed-time">Not closed yet</span>
+                        </div>
+                        <div class="timestamp-item" id="view-resolution-time-container" style="display: none;">
+                            <span class="timestamp-label">Time to Resolve:</span>
+                            <span id="view-resolution-time">N/A</span>
                         </div>
                     </div>
-                    
-                    <!-- Original Description -->
-                    <div class="detail-row full-width">
-                        <label>Original Description:</label>
-                        <div id="view-description" class="description-content"></div>
-                    </div>
-                    
-                    <!-- IT Comments Section -->
-                    <div class="detail-row full-width">
-                        <label>IT Comments & Updates:</label>
-                        <div id="view-it-comment" class="description-content"></div>
+                </div>
+                
+                <!-- Network Information Section -->
+                <div class="detail-row full-width">
+                    <label>Network Information:</label>
+                    <div class="network-info-section">
+                        <div class="network-info-item">
+                            <span class="network-info-label">IP Address:</span>
+                            <span id="view-ip">Unknown</span>
+                        </div>
+                        <div class="network-info-item">
+                            <span class="network-info-label">Computer Name:</span>
+                            <span id="view-computer">Unknown</span>
+                        </div>
+                        <div class="network-info-item">
+                            <span class="network-info-label">User Agent:</span>
+                            <span id="view-useragent">Unknown</span>
+                        </div>
+                        <div class="network-info-item">
+                            <span class="network-info-label">Private IP:</span>
+                            <span id="view-private-ip">Unknown</span>
+                        </div>
+                        <div class="network-info-item">
+                            <span class="network-info-label">Username:</span>
+                            <span id="view-username">Unknown</span>
+                        </div>
+                        <div class="network-info-item">
+                            <span class="network-info-label">Device ID:</span>
+                            <span id="view-device-id">Unknown</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+                
+                <!-- Original Description -->
+                <div class="detail-row full-width">
+                    <label>Original Description:</label>
+                    <div id="view-description" class="description-content"></div>
+                </div>
+                
+                <!-- IT Comments Section -->
+                <div class="detail-row full-width">
+                    <label>IT Comments & Updates:</label>
+                    <div id="view-it-comment" class="description-content"></div>
+                </div>
             </div>
         </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+        </div>
     </div>
+</div>
 
     <!-- Bulk Actions Modal -->
     <div id="bulkModal" class="modal">
@@ -594,16 +618,7 @@
     <div id="network-info-label" style="margin: 10px 0;"></div>
 
     <!-- JavaScript Modules -->
-    <script src="/js/config.js"></script>
-    <script src="/js/network-service.js"></script>
-    <script src="/js/audio-service.js"></script>
-    <script src="/js/ticket-service.js"></script>
-    <script src="/js/modal-manager.js"></script>
-    <script src="/js/bulk-action-manager.js"></script>
-    <script src="/js/selection-manager.js"></script>
-    <script src="/js/filter-manager.js"></script>
-    <script src="/js/refresh-manager.js"></script>
-    <script src="/js/user-manager.js"></script>
-    <script src="/js/main.js"></script>
+    <script src="/js/table-manager.js"></script>
+
 </body>
 </html>

@@ -11,23 +11,33 @@ public class TicketValidatorService {
             return false;
         }
 
-        // Check length (5-20 characters)
-        if (fullName.length() < 5 || fullName.length() > 20) {
+        // Check length (1-255 characters - increased for emails)
+        if (fullName.length() < 1 || fullName.length() > 255) {
             return false;
         }
 
-        // Allow letters, spaces, hyphens, apostrophes - but NO digits
+        // Check if it's an email (contains @) - allow email format
+        if (fullName.contains("@")) {
+            // Simple email validation: allow letters, numbers, @, ., -, _
+            for (int i = 0; i < fullName.length(); i++) {
+                char c = fullName.charAt(i);
+                if (!Character.isLetterOrDigit(c) && c != '@' && c != '.' && c != '-' && c != '_') {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        // If not an email, use the original name validation
+        // Allow letters, spaces, hyphens, apostrophes, periods
         for (int i = 0; i < fullName.length(); i++) {
             char c = fullName.charAt(i);
             if (!Character.isLetter(c) && c != ' ' && c != '-' && c != '\'' && c != '.') {
-                return false; // Reject if contains digits or other special characters
+                return false;
             }
         }
 
-        // Check if contains at least one space (first name + last name)
-        if (!fullName.contains(" ")) {
-            return false;
-        }
+
 
         return true;
     }

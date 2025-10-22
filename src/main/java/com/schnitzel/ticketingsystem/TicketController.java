@@ -2,15 +2,10 @@ package com.schnitzel.ticketingsystem;
 
 import com.schnitzel.ticketingsystem.dto.TicketRegistrationRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,7 +64,8 @@ public class TicketController {
             request.getClientIpAddress(),
             request.getComputerName(),
             request.getUserAgent(),
-            request.getItComment()
+            request.getItComment(),
+            request.getClosedTime()  // Add closedTime here
         );
         
         return updated ? 
@@ -90,6 +86,4 @@ public class TicketController {
         List<Ticket> tickets = ticketService.searchTickets(query);
         return ResponseEntity.ok(tickets);
     }
-    
-    
 }

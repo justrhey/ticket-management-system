@@ -229,7 +229,7 @@ body {
     max-height: 720px;
 }
 
-/* Table Structure */
+/* Fixed Table Structure */
 .tickets-table {
     width: 100%;
     border-collapse: collapse;
@@ -238,6 +238,9 @@ body {
 
 .tickets-table thead {
     background: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .tickets-table tbody {
@@ -290,14 +293,15 @@ body {
     background-color: #f8f9fa;
 }
 
-/* Column Widths */
+/* Updated Column Widths with Requester Column */
 .select-column { width: 50px; text-align: center; }
-.id-column { width: 30px; }
-.title-column { width: 300px; }
-.status-column { width: 120px; }
-.priority-column { width: 100px; }
-.assignee-column { width: 150px; }
-.date-column { width: 120px; }
+.id-column { width: 60px; }
+.title-column { width: 250px; }
+.status-column { width: 100px; }
+.priority-column { width: 90px; }
+.assignee-column { width: 140px; }
+.requester-column { width: 140px; }
+.date-column { width: 100px; }
 .actions-column { width: 150px; }
 
 /* Badges */
@@ -866,4 +870,213 @@ body {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+/* User Management Styles */
+.user-management-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.users-table th {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.users-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.users-table tr:hover {
+    background: #f8f9fa;
+}
+
+.user-name {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.it-staff-badge {
+    display: inline-block;
+    background: #0041d8;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7em;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.position-display {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.role-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.role-user { background: #e9ecef; color: #495057; }
+.role-admin { background: #fff3cd; color: #856404; }
+.role-super_admin { background: #d4edda; color: #155724; }
+
+.user-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.no-users-message {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+}
+
+.no-users-message a {
+    color: #0041d8;
+    text-decoration: none;
+}
+
+.no-users-message a:hover {
+    text-decoration: underline;
+}
+
+/* Requester Column Styles */
+.requester-column {
+    font-size: 0.8rem;
+    color: #2c3e50;
+}
+
+.requester-column:hover {
+    cursor: help;
+}
+
+/* Ensure proper table alignment */
+.tickets-table {
+    border-spacing: 0;
+}
+
+.tickets-table th,
+.tickets-table td {
+    border-right: 1px solid #f1f3f4;
+}
+
+.tickets-table th:last-child,
+.tickets-table td:last-child {
+    border-right: none;
+}
+
+/* Fix table header alignment */
+.tickets-table thead {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Ensure consistent row heights */
+.tickets-table tbody tr {
+    height: 50px;
+}
+
+/* Make sure the table fits within the container */
+.table-wrapper {
+    position: relative;
+}
+
+/* Add subtle hover effect for requester column */
+.requester-column:hover {
+    background: #f0f8ff;
+    transition: background-color 0.2s;
+}
+
+/* Timestamp Styles */
+.timestamps-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.timestamp-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.timestamp-item:last-child {
+    border-bottom: none;
+}
+
+.timestamp-label {
+    font-weight: 600;
+    color: #495057;
+    min-width: 120px;
+}
+
+.timestamp-value {
+    color: #6c757d;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.resolution-time {
+    background: #d4edda;
+    color: #155724;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* Status timeline indicator */
+.status-timeline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.timeline-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #28a745;
+}
+
+.timeline-dot.open {
+    background: #28a745;
+}
+
+.timeline-dot.closed {
+    background: #dc3545;
+}
+
+.timeline-dot.in-progress {
+    background: #ffc107;
+}
+
+.timeline-text {
+    font-size: 0.9em;
+    color: #6c757d;
 }

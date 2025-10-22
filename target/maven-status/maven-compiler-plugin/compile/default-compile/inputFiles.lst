@@ -2,6 +2,7 @@
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/UserRole.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/security/Admin.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/controller/UserInfoController.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/config/SecurityConfig.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/TicketingSystemApplication.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/UserController.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/TicketService.java
