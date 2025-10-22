@@ -1,7 +1,11 @@
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/controller/WebController.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/UserRole.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/security/Admin.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/controller/UserInfoController.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/TicketingSystemApplication.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/UserController.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/TicketService.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/dto/TicketDto.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/security/NetworkUtils.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/TicketController.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/service/EmailService.java
@@ -12,5 +16,6 @@
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/Ticket.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/dto/TicketRegistrationRequest.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/TicketValidatorService.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/controller/NetworkController.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/UserRepository.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/config/StaticResourceConfig.java

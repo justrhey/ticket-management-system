@@ -14,6 +14,9 @@
             <div class="header-actions">
                 <button class="btn btn-primary" onclick="refreshTable()">Refresh</button>
                 <button class="btn btn-success" onclick="bulkAction()">Bulk Action</button>
+                <button class="btn btn-info" onclick="openUserManagement()" style="margin-left: 10px;">
+                    Manage Users
+                </button>
             </div>
         </header>
 
@@ -24,7 +27,22 @@
                 <div class="sidebar-header">
                     <h3>Filters & Selection</h3>
                 </div>
-                
+
+                <div class="quick-actions">
+                    <h4>Quick Actions</h4>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="location.href='/dashboard'">
+                            Dashboard
+                        </button>
+                        <button class="btn btn-success" onclick="location.href='/?create=new'">
+                            Create New Ticket
+                        </button>
+                        <button class="btn btn-outline" onclick="exportData()">
+                            Export to CSV
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Bulk Actions -->
                 <div class="bulk-actions">
                     <h4>Selected Tickets (<span id="selected-count">0</span>)</h4>
@@ -106,9 +124,6 @@
                         </select>
                     </div>
 
-
-</script>
-
                     <div class="control-group">
                         <label class="auto-refresh-toggle">
                             <input type="checkbox" id="auto-refresh-toggle" checked>
@@ -116,12 +131,6 @@
                             Live Updates
                         </label>
                         <span id="refresh-indicator" class="refresh-indicator"> Live</span>
-                    </div>
-
-                    <!-- Test Button -->
-                    <div style="margin-left: 10px;">
-                        <button class="btn btn-small" onclick="testModals()" style="background: #ff6b6b;">
-                        </button>
                     </div>
                 </div>
 
@@ -185,8 +194,6 @@
                             Last »
                         </button>
                     </div>
-                    <!-- Add anywhere in your HTML -->
-
                 </div>
             </main>
         </div>
@@ -327,6 +334,18 @@
                                 <span class="network-info-label">User Agent:</span>
                                 <span id="view-useragent">Unknown</span>
                             </div>
+                            <div class="network-info-item">
+                                <span class="network-info-label">Private IP:</span>
+                                <span id="view-private-ip">Unknown</span>
+                            </div>
+                            <div class="network-info-item">
+                                <span class="network-info-label">Username:</span>
+                                <span id="view-username">Unknown</span>
+                            </div>
+                            <div class="network-info-item">
+                                <span class="network-info-label">Device ID:</span>
+                                <span id="view-device-id">Unknown</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -447,6 +466,144 @@
         </div>
     </div>
 
-    <script src="/js/table-manager.js"></script>
+    <!-- User Management Modal -->
+    <div id="userManagementModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>User Management</h2>
+                <span class="close" onclick="closeUserManagement()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- User Management Controls -->
+                <div class="user-management-controls">
+                    <div class="search-box">
+                        <input type="text" id="userSearchInput" placeholder="Search users...">
+                        <span class="search-icon">⌕</span>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn btn-primary" onclick="openAddUserModal()">
+                            + Add New User
+                        </button>
+                        <button class="btn btn-outline" onclick="exportUsersToCSV()">
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="table-wrapper">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Position</th>
+                                <th>Role</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Users will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeUserManagement()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 id="userModalTitle">Add New User</h2>
+                <span class="close" onclick="closeUserModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <div class="form-group">
+                        <label class="required">Full Name</label>
+                        <input type="text" class="form-input" id="userFullName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Email</label>
+                        <input type="email" class="form-input" id="userEmail" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Position</label>
+                        <input type="text" class="form-input" id="userPosition" 
+                               placeholder="e.g., Software Developer, HR Manager">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Role</label>
+                        <select class="form-select" id="userRole" required>
+                            <option value="USER">User</option>
+                            <option value="ADMIN">Admin</option>
+                            <option value="SUPER_ADMIN">Super Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="userPasswordGroup">
+                        <label class="required">Password</label>
+                        <input type="password" class="form-input" id="userPassword" 
+                               placeholder="Enter password for new user">
+                        <small style="color: #666;">
+                            Password is required for new users. Leave blank when editing if you don't want to change it.
+                        </small>
+                    </div>
+
+                    <!-- Admin-specific fields -->
+                    <div id="adminFields" style="display: none;">
+                        <div class="form-section">
+                            <h3 class="form-section-title">Admin Settings</h3>
+                            <div class="form-group">
+                                <label>Admin Notes</label>
+                                <textarea class="form-textarea" id="adminNotes" 
+                                          placeholder="Additional notes for admin users..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Loading State -->
+                <div id="userLoading" class="create-loading hidden">
+                    <div class="loading-spinner"></div>
+                    <p>Saving user...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeUserModal()">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="userSubmitBtn" onclick="saveUser()">
+                    Add User
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Info Label (for forms) -->
+    <div id="network-info-label" style="margin: 10px 0;"></div>
+
+    <!-- JavaScript Modules -->
+    <script src="/js/config.js"></script>
+    <script src="/js/network-service.js"></script>
+    <script src="/js/audio-service.js"></script>
+    <script src="/js/ticket-service.js"></script>
+    <script src="/js/modal-manager.js"></script>
+    <script src="/js/bulk-action-manager.js"></script>
+    <script src="/js/selection-manager.js"></script>
+    <script src="/js/filter-manager.js"></script>
+    <script src="/js/refresh-manager.js"></script>
+    <script src="/js/user-manager.js"></script>
+    <script src="/js/main.js"></script>
 </body>
 </html>

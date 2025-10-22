@@ -42,30 +42,42 @@ public class WebController {
         return "forward:/logIn.html";
     }
     
-    @PostMapping("/login")
-    public String login(@RequestParam String email,
-                       @RequestParam String password, 
-                       HttpSession session) {
+@PostMapping("/login")
+public String login(@RequestParam String email,
+                   @RequestParam String password, 
+                   HttpSession session) {
+    
+    try {
+        System.out.println("Login attempt for: " + email);
         
-        try {
-            System.out.println("Login attempt for: " + email);
-            
-            if (userService.validateUser(email, password)) {
-                Optional<User> userOpt = userService.findByEmail(email);
-                if (userOpt.isPresent()) {
-                    User user = userOpt.get();
-                    session.setAttribute("user", user.getEmail());
-                    session.setAttribute("authenticated", true);
+        if (userService.validateUser(email, password)) {
+            Optional<User> userOpt = userService.findByEmail(email);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                
+                // Store comprehensive user info in session
+                session.setAttribute("user", user); // Store entire user object
+                session.setAttribute("authenticated", true);
+                session.setAttribute("userEmail", user.getEmail());
+                session.setAttribute("userRole", user.getRole());
+                session.setAttribute("userId", user.getId());
+                session.setAttribute("userFullName", user.getFullName());
+                
+                // Optional: Role-based redirection
+                if (user.isAdmin()) {
                     return "redirect:/ticket";
                 }
+                
+                return "redirect:/";
             }
-            
-            return "redirect:/login?error=true";
-            
-        } catch (Exception e) {
-            System.out.println("Login error: " + e.getMessage());
-            e.printStackTrace();
-            return "redirect:/login?error=true";
         }
+        
+        return "redirect:/login?error=true";
+        
+    } catch (Exception e) {
+        System.out.println("Login error: " + e.getMessage());
+        e.printStackTrace();
+        return "redirect:/login?error=true";
     }
+}
 }

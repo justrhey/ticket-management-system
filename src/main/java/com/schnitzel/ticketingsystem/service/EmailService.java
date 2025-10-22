@@ -19,7 +19,7 @@ public class EmailService {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(itCompanyEmail);
-            message.setSubject("🎫 New Support Ticket: " + subject);
+            message.setSubject(" New Support Ticket: " + subject);
             message.setText(
                 "A new support ticket has been created:\n\n" +
                 " Requester: " + requesterName + "\n" +
@@ -33,7 +33,7 @@ public class EmailService {
             System.out.println("Email sent successfully to: " + itCompanyEmail);
             
         } catch (Exception e) {
-            System.out.println("❌ Failed to send email: " + e.getMessage());
+            System.out.println(" Failed to send email: " + e.getMessage());
             e.printStackTrace();
         }
     }

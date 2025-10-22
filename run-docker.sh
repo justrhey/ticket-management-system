@@ -3,23 +3,23 @@
 # Ticket Management System - One-click Startup
 set -e
 
-echo "🎫 Ticket Management System Startup"
+echo "Ticket Management System Startup"
 echo "======================================"
 
 # Check if Docker is installed
 if ! command -v docker &> /dev/null; then
-    echo "❌ Docker is not installed. Please install Docker first."
-    echo "📖 Visit: https://docs.docker.com/get-docker/"
+    echo " Docker is not installed. Please install Docker first."
+    echo " Visit: https://docs.docker.com/get-docker/"
     exit 1
 fi
 
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
-    echo "🚀 Starting Docker daemon..."
+    echo " Starting Docker daemon..."
     if command -v sudo &> /dev/null; then
         sudo systemctl start docker
     else
-        echo "❌ Please start Docker manually and run this script again"
+        echo " Please start Docker manually and run this script again"
         exit 1
     fi
     sleep 5
@@ -27,20 +27,20 @@ fi
 
 # Check if Maven is installed
 if ! command -v mvn &> /dev/null; then
-    echo "❌ Maven is not installed. Please install Maven first."
-    echo "📖 Visit: https://maven.apache.org/install.html"
+    echo "Maven is not installed. Please install Maven first."
+    echo " Visit: https://maven.apache.org/install.html"
     exit 1
 fi
 
-echo "✅ Prerequisites check passed"
-echo "📦 Building application..."
+echo "Prerequisites check passed"
+echo "Building application..."
 mvn clean package -DskipTests
 
-echo "🐳 Starting Docker containers..."
+echo "Starting Docker containers..."
 docker-compose down 2>/dev/null || true
 docker-compose up --build -d
 
-echo "⏳ Waiting for services to start (30 seconds)..."
+echo "Waiting for services to start (30 seconds)..."
 for i in {1..30}; do
     if curl -s http://localhost:8080/actuator/health > /dev/null 2>&1; then
         echo " Application started successfully!"
