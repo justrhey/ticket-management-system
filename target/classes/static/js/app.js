@@ -446,8 +446,8 @@ function displayTickets(tickets) {
         ticketElement.innerHTML = `
             <div>#${ticket.ticketId}</div>
             <div>
-                <div>${escapeHtml(ticket.subject)}</div>
-                <div style="font-size: 0.9em; color: #666;">${escapeHtml(ticket.intent || 'No description')}</div>
+                <div class="ticket-title">${escapeHtml(ticket.subject)}</div>
+                <div class="ticket-description">${escapeHtml(ticket.intent || 'No description')}</div>
                 ${networkInfoText}
             </div>
             <div>${escapeHtml(ticket.fullName)}</div>

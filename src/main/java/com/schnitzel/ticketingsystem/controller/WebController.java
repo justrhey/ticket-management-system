@@ -64,8 +64,11 @@ public class WebController {
     }
 
     @GetMapping("/tickets")
-    public String tickets() {
-        // PUBLIC - Tickets page
+    public String tickets(HttpSession session) {
+        // PROTECTED - Check if user is logged in
+        if (session.getAttribute("user") == null) {
+            return "redirect:/login";
+        }
         return "forward:/ticket.html";
     }
 

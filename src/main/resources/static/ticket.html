@@ -37,7 +37,7 @@
                         <button class="btn btn-success" onclick="location.href='/?create=new'">
                             Create New Ticket
                         </button>
-                        <button class="btn btn-outline" onclick="exportData()">
+                        <button class="btn btn-outline" onclick="exportToCSV()">
                             Export to CSV
                         </button>
                     </div>
@@ -238,13 +238,7 @@
                         <label class="required">Assigned To</label>
                         <select class="form-select" id="edit-assignedPerson" required>
                             <option value="">Select IT Staff</option>
-                            <option value="IT Network and System Engineer">IT Network and System Engineer</option>
-                            <option value="IT Support Specialist">IT Support Specialist</option>
-                            <option value="IT Administrator">IT Administrator</option>
-                            <option value="IT Manager">IT Manager</option>
-                            <option value="System Analyst">System Analyst</option>
-                            <option value="Database Administrator">Database Administrator</option>
-                            <option value="Security Specialist">Security Specialist</option>
+                            <!-- IT staff will be populated dynamically -->
                         </select>
                     </div>
                     
@@ -281,116 +275,116 @@
         </div>
     </div>
 
-<!-- View Ticket Modal - Updated with Timestamps -->
-<div id="viewModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Ticket Details</h2>
-            <span class="close" onclick="closeViewModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <div class="ticket-details">
-                <div class="detail-row">
-                    <label>Ticket ID:</label>
-                    <span id="view-id"></span>
-                </div>
-                <div class="detail-row">
-                    <label>Subject:</label>
-                    <span id="view-subject"></span>
-                </div>
-                <div class="detail-row">
-                    <label>Requester:</label>
-                    <span id="view-requester"></span>
-                </div>
-                <div class="detail-row">
-                    <label>Status:</label>
-                    <span id="view-status"></span>
-                </div>
-                <div class="detail-row">
-                    <label>Priority:</label>
-                    <span id="view-priority"></span>
-                </div>
-                <div class="detail-row">
-                    <label>Assigned To:</label>
-                    <span id="view-assigned"></span>
-                </div>
-                
-                <!-- Timestamps Section -->
-                <div class="detail-row full-width">
-                    <label>Timestamps:</label>
-                    <div class="timestamps-section">
-                        <div class="timestamp-item">
-                            <span class="timestamp-label">Created:</span>
-                            <span id="view-created">Unknown</span>
-                        </div>
-                        <div class="timestamp-item">
-                            <span class="timestamp-label">Last Updated:</span>
-                            <span id="view-updated">Unknown</span>
-                        </div>
-                        <div class="timestamp-item">
-                            <span class="timestamp-label">Opened:</span>
-                            <span id="view-opened-time">Unknown</span>
-                        </div>
-                        <div class="timestamp-item">
-                            <span class="timestamp-label">Closed:</span>
-                            <span id="view-closed-time">Not closed yet</span>
-                        </div>
-                        <div class="timestamp-item" id="view-resolution-time-container" style="display: none;">
-                            <span class="timestamp-label">Time to Resolve:</span>
-                            <span id="view-resolution-time">N/A</span>
+    <!-- View Ticket Modal - Updated with Timestamps -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ticket Details</h2>
+                <span class="close" onclick="closeViewModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="ticket-details">
+                    <div class="detail-row">
+                        <label>Ticket ID:</label>
+                        <span id="view-id"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Subject:</label>
+                        <span id="view-subject"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Requester:</label>
+                        <span id="view-requester"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Status:</label>
+                        <span id="view-status"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Priority:</label>
+                        <span id="view-priority"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Assigned To:</label>
+                        <span id="view-assigned"></span>
+                    </div>
+                    
+                    <!-- Timestamps Section -->
+                    <div class="detail-row full-width">
+                        <label>Timestamps:</label>
+                        <div class="timestamps-section">
+                            <div class="timestamp-item">
+                                <span class="timestamp-label">Created:</span>
+                                <span id="view-created">Unknown</span>
+                            </div>
+                            <div class="timestamp-item">
+                                <span class="timestamp-label">Last Updated:</span>
+                                <span id="view-updated">Unknown</span>
+                            </div>
+                            <div class="timestamp-item">
+                                <span class="timestamp-label">Opened:</span>
+                                <span id="view-opened-time">Unknown</span>
+                            </div>
+                            <div class="timestamp-item">
+                                <span class="timestamp-label">Closed:</span>
+                                <span id="view-closed-time">Not closed yet</span>
+                            </div>
+                            <div class="timestamp-item" id="view-resolution-time-container" style="display: none;">
+                                <span class="timestamp-label">Time to Resolve:</span>
+                                <span id="view-resolution-time">N/A</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Network Information Section -->
-                <div class="detail-row full-width">
-                    <label>Network Information:</label>
-                    <div class="network-info-section">
-                        <div class="network-info-item">
-                            <span class="network-info-label">IP Address:</span>
-                            <span id="view-ip">Unknown</span>
-                        </div>
-                        <div class="network-info-item">
-                            <span class="network-info-label">Computer Name:</span>
-                            <span id="view-computer">Unknown</span>
-                        </div>
-                        <div class="network-info-item">
-                            <span class="network-info-label">User Agent:</span>
-                            <span id="view-useragent">Unknown</span>
-                        </div>
-                        <div class="network-info-item">
-                            <span class="network-info-label">Private IP:</span>
-                            <span id="view-private-ip">Unknown</span>
-                        </div>
-                        <div class="network-info-item">
-                            <span class="network-info-label">Username:</span>
-                            <span id="view-username">Unknown</span>
-                        </div>
-                        <div class="network-info-item">
-                            <span class="network-info-label">Device ID:</span>
-                            <span id="view-device-id">Unknown</span>
+                    
+                    <!-- Network Information Section -->
+                    <div class="detail-row full-width">
+                        <label>Network Information:</label>
+                        <div class="network-info-section">
+                            <div class="network-info-item">
+                                <span class="network-info-label">IP Address:</span>
+                                <span id="view-ip">Unknown</span>
+                            </div>
+                            <div class="network-info-item">
+                                <span class="network-info-label">Computer Name:</span>
+                                <span id="view-computer">Unknown</span>
+                            </div>
+                            <div class="network-info-item">
+                                <span class="network-info-label">User Agent:</span>
+                                <span id="view-useragent">Unknown</span>
+                            </div>
+                            <div class="network-info-item">
+                                <span class="network-info-label">Private IP:</span>
+                                <span id="view-private-ip">Unknown</span>
+                            </div>
+                            <div class="network-info-item">
+                                <span class="network-info-label">Username:</span>
+                                <span id="view-username">Unknown</span>
+                            </div>
+                            <div class="network-info-item">
+                                <span class="network-info-label">Device ID:</span>
+                                <span id="view-device-id">Unknown</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Original Description -->
-                <div class="detail-row full-width">
-                    <label>Original Description:</label>
-                    <div id="view-description" class="description-content"></div>
-                </div>
-                
-                <!-- IT Comments Section -->
-                <div class="detail-row full-width">
-                    <label>IT Comments & Updates:</label>
-                    <div id="view-it-comment" class="description-content"></div>
+                    
+                    <!-- Original Description -->
+                    <div class="detail-row full-width">
+                        <label>Original Description:</label>
+                        <div id="view-description" class="description-content"></div>
+                    </div>
+                    
+                    <!-- IT Comments Section -->
+                    <div class="detail-row full-width">
+                        <label>IT Comments & Updates:</label>
+                        <div id="view-it-comment" class="description-content"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- Bulk Actions Modal -->
     <div id="bulkModal" class="modal">
@@ -416,13 +410,7 @@
                     <label>Assign To</label>
                     <select class="form-select" id="bulk-assignee">
                         <option value="">Select IT Staff</option>
-                        <option value="IT Network and System Engineer">IT Network and System Engineer</option>
-                        <option value="IT Support Specialist">IT Support Specialist</option>
-                        <option value="IT Administrator">IT Administrator</option>
-                        <option value="IT Manager">IT Manager</option>
-                        <option value="System Analyst">System Analyst</option>
-                        <option value="Database Administrator">Database Administrator</option>
-                        <option value="Security Specialist">Security Specialist</option>
+                        <!-- IT staff will be populated dynamically -->
                     </select>
                 </div>
                 
@@ -562,8 +550,16 @@
 
                     <div class="form-group">
                         <label>Position</label>
-                        <input type="text" class="form-input" id="userPosition" 
-                               placeholder="e.g., Software Developer, HR Manager">
+                        <div class="searchable-dropdown">
+                            <input type="text" class="form-input" id="userPositionSearch" 
+                                   placeholder="Search or select position..." 
+                                   oninput="filterPositions()"
+                                   onfocus="showPositionDropdown()">
+                            <div id="positionDropdown" class="dropdown-list hidden">
+                                <!-- Positions will be populated here -->
+                            </div>
+                        </div>
+                        <input type="hidden" id="userPosition" value="">
                     </div>
 
                     <div class="form-group">
@@ -614,11 +610,166 @@
         </div>
     </div>
 
+    <!-- Password Update Modal -->
+    <div id="passwordUpdateModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Update User Password</h2>
+                <span class="close" onclick="closePasswordUpdateModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>User:</label>
+                    <div class="user-info" id="password-update-user-name" style="
+                        background: #f8f9fa;
+                        padding: 10px;
+                        border-radius: 4px;
+                        border: 1px solid #e9ecef;
+                        font-weight: bold;
+                    "></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="required">New Password</label>
+                    <input type="password" class="form-input" id="newPassword" 
+                           placeholder="Enter new password" required
+                           minlength="6">
+                    <small style="color: #666;">
+                        Password must be at least 6 characters long
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="required">Confirm Password</label>
+                    <input type="password" class="form-input" id="confirmPassword" 
+                           placeholder="Confirm new password" required
+                           minlength="6">
+                </div>
+                
+                <div class="security-notice" style="
+                    background: #fff3cd;
+                    border: 1px solid #ffeaa7;
+                    border-radius: 4px;
+                    padding: 12px;
+                    margin: 15px 0;
+                    color: #856404;
+                ">
+                    <strong>Security Notice:</strong> Only Super Administrators can update user passwords. 
+                    This action will immediately change the user's password.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePasswordUpdateModal()">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-warning" onclick="updateUserPassword()">
+                    Update Password
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Network Info Label (for forms) -->
     <div id="network-info-label" style="margin: 10px 0;"></div>
 
     <!-- JavaScript Modules -->
     <script src="/js/table-manager.js"></script>
+
+    <!-- Add CSS for the dropdown and password update -->
+    <style>
+        /* Searchable Dropdown Styles */
+        .searchable-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 0 0 4px 4px;
+        }
+
+        .dropdown-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item.no-results {
+            color: #6c757d;
+            font-style: italic;
+            cursor: default;
+        }
+
+        .dropdown-item.no-results:hover {
+            background-color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Ensure the input has proper z-index */
+        #userPositionSearch {
+            position: relative;
+            z-index: 1001;
+        }
+
+        /* Password Update Button Styles */
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+            border: 1px solid #ffc107;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+            border-color: #d39e00;
+        }
+
+        .btn-warning:disabled {
+            background-color: #ffc107;
+            opacity: 0.65;
+        }
+
+        /* Icon for password button */
+        .icon-lock {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            margin-right: 4px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23212529'%3E%3Cpath d='M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM15.1 8H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* Security notice styling */
+        .security-notice {
+            font-size: 0.9em;
+        }
+
+        .security-notice strong {
+            color: #856404;
+        }
+    </style>
 
 </body>
 </html>

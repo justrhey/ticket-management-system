@@ -33,6 +33,103 @@ let currentUser = {
     role: ''
 };
 
+// Corporate positions array
+const CORPORATE_POSITIONS = [
+    // Executive Leadership
+    'Chief Executive Officer (CEO)',
+    'Chief Operating Officer (COO)',
+    'Chief Financial Officer (CFO)',
+    'Chief Technology Officer (CTO)',
+    'Chief Marketing Officer (CMO)',
+    'Chief Human Resources Officer (CHRO)',
+    'President',
+    'Vice President',
+    
+    // IT Department
+    'IT Director',
+    'IT Manager',
+    'IT Network and System Engineer',
+    'IT Support Specialist',
+    'IT Administrator',
+    'System Analyst',
+    'Database Administrator',
+    'Security Specialist',
+    'Software Developer',
+    'Web Developer',
+    'DevOps Engineer',
+    'Cloud Architect',
+    'Network Administrator',
+    'Help Desk Technician',
+    
+    // Finance Department
+    'Finance Director',
+    'Finance Manager',
+    'Financial Analyst',
+    'Accountant',
+    'Bookkeeper',
+    'Accounts Payable Specialist',
+    'Accounts Receivable Specialist',
+    'Payroll Administrator',
+    
+    // HR Department
+    'HR Director',
+    'HR Manager',
+    'HR Generalist',
+    'Recruiter',
+    'Training and Development Specialist',
+    'Compensation and Benefits Analyst',
+    
+    // Marketing Department
+    'Marketing Director',
+    'Marketing Manager',
+    'Digital Marketing Specialist',
+    'Content Marketing Specialist',
+    'SEO Specialist',
+    'Social Media Manager',
+    'Brand Manager',
+    'Market Research Analyst',
+    
+    // Sales Department
+    'Sales Director',
+    'Sales Manager',
+    'Account Executive',
+    'Sales Representative',
+    'Business Development Manager',
+    'Customer Success Manager',
+    
+    // Operations Department
+    'Operations Director',
+    'Operations Manager',
+    'Project Manager',
+    'Supply Chain Manager',
+    'Logistics Coordinator',
+    'Quality Assurance Manager',
+    
+    // Administrative Roles
+    'Office Manager',
+    'Executive Assistant',
+    'Administrative Assistant',
+    'Receptionist',
+    
+    // Creative Department
+    'Creative Director',
+    'Graphic Designer',
+    'UX/UI Designer',
+    'Content Writer',
+    'Video Producer',
+    
+    // Other Technical Roles
+    'Data Scientist',
+    'Business Analyst',
+    'Product Manager',
+    'Project Coordinator',
+    
+    // Entry Level / General
+    'Intern',
+    'Trainee',
+    'Junior Associate'
+];
+
 // MP3 Sound Notification System
 const notificationSounds = {
     'new-ticket': '/sounds/ticket-notif.mp3',
@@ -46,6 +143,9 @@ let audioEnabled = false;
 let audioContext = null;
 let soundVolume = 0.7;
 
+// Position dropdown management
+let positionDropdownVisible = false;
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     console.log('=== TICKET TABLE INITIALIZATION ===');
@@ -53,9 +153,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     loadSoundPreferences();
     initializeCurrentUser();
-    loadTickets();
     initializeEventListeners();
     initializeAutoRefresh();
+    initializePositionDropdown();
     
     console.log('Ticket table system ready');
 });
@@ -80,6 +180,9 @@ async function initializeCurrentUser() {
             };
             console.log('Current user loaded:', currentUser);
             updateUserInfoInUI();
+            
+            // Load tickets and users after current user is initialized
+            loadTickets();
         } else {
             console.warn('Could not load current user info, using default');
             currentUser = {
@@ -89,6 +192,8 @@ async function initializeCurrentUser() {
                 position: 'Unknown',
                 role: 'USER'
             };
+            // Load tickets and users even if current user fails
+            loadTickets();
         }
     } catch (error) {
         console.error('Error loading current user:', error);
@@ -99,6 +204,8 @@ async function initializeCurrentUser() {
             position: 'Unknown',
             role: 'USER'
         };
+        // Load tickets and users even if current user fails
+        loadTickets();
     }
 }
 
@@ -112,6 +219,156 @@ function updateUserInfoInUI() {
     const requesterField = document.getElementById('current-requester');
     if (requesterField) {
         requesterField.textContent = `${currentUser.fullName} - ${currentUser.email}`;
+    }
+}
+
+// Position dropdown functions
+function showPositionDropdown() {
+    const dropdown = document.getElementById('positionDropdown');
+    if (!dropdown) return;
+    
+    positionDropdownVisible = true;
+    dropdown.classList.remove('hidden');
+    populatePositionDropdown('');
+    
+    // Add click outside listener
+    setTimeout(() => {
+        document.addEventListener('click', handleClickOutsidePositionDropdown);
+    }, 100);
+}
+
+function hidePositionDropdown() {
+    const dropdown = document.getElementById('positionDropdown');
+    if (!dropdown) return;
+    
+    positionDropdownVisible = false;
+    dropdown.classList.add('hidden');
+    document.removeEventListener('click', handleClickOutsidePositionDropdown);
+}
+
+function handleClickOutsidePositionDropdown(event) {
+    const dropdown = document.getElementById('positionDropdown');
+    const searchInput = document.getElementById('userPositionSearch');
+    
+    if (!dropdown.contains(event.target) && event.target !== searchInput) {
+        hidePositionDropdown();
+    }
+}
+
+function filterPositions() {
+    const searchInput = document.getElementById('userPositionSearch');
+    const searchTerm = searchInput.value.toLowerCase();
+    populatePositionDropdown(searchTerm);
+}
+
+function populatePositionDropdown(searchTerm = '') {
+    const dropdown = document.getElementById('positionDropdown');
+    if (!dropdown) return;
+    
+    const filteredPositions = CORPORATE_POSITIONS.filter(position => 
+        position.toLowerCase().includes(searchTerm)
+    );
+    
+    dropdown.innerHTML = filteredPositions.map(position => `
+        <div class="dropdown-item" onclick="selectPosition('${position}')">
+            ${position}
+        </div>
+    `).join('');
+    
+    if (filteredPositions.length === 0) {
+        dropdown.innerHTML = '<div class="dropdown-item no-results">No positions found</div>';
+    }
+}
+
+function selectPosition(position) {
+    const searchInput = document.getElementById('userPositionSearch');
+    const hiddenInput = document.getElementById('userPosition');
+    
+    if (searchInput) searchInput.value = position;
+    if (hiddenInput) hiddenInput.value = position;
+    
+    hidePositionDropdown();
+}
+
+function validatePosition(position) {
+    return CORPORATE_POSITIONS.includes(position);
+}
+
+function initializePositionDropdown() {
+    populatePositionDropdown('');
+}
+
+// Get IT staff users for assignment dropdowns
+function getITStaffUsers() {
+    const itPositions = [
+        'IT Director',
+        'IT Manager',
+        'IT Network and System Engineer',
+        'IT Support Specialist',
+        'IT Administrator',
+        'System Analyst',
+        'Database Administrator',
+        'Security Specialist',
+        'Software Developer',
+        'Web Developer',
+        'DevOps Engineer',
+        'Cloud Architect',
+        'Network Administrator',
+        'Help Desk Technician',
+        'Chief Technology Officer (CTO)'
+    ];
+    
+    return allUsers.filter(user => 
+        user.position && itPositions.some(itPosition => 
+            user.position.toLowerCase().includes(itPosition.toLowerCase()) ||
+            itPosition.toLowerCase().includes(user.position.toLowerCase())
+        )
+    );
+}
+
+// Update assignment dropdowns with IT staff
+function updateAssignmentDropdowns() {
+    const itStaff = getITStaffUsers();
+    
+    // Update bulk assignment dropdown
+    const bulkAssigneeSelect = document.getElementById('bulk-assignee');
+    if (bulkAssigneeSelect) {
+        // Save current selection
+        const currentSelection = bulkAssigneeSelect.value;
+        
+        // Clear and repopulate
+        bulkAssigneeSelect.innerHTML = '<option value="">Select IT Staff</option>';
+        
+        itStaff.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.id; // Store user ID instead of name
+            option.textContent = `${user.fullName} - ${user.position}`;
+            bulkAssigneeSelect.appendChild(option);
+        });
+        
+        // Restore selection if still valid
+        if (currentSelection) {
+            bulkAssigneeSelect.value = currentSelection;
+        }
+    }
+    
+    // Update edit ticket assignment dropdown
+    const editAssigneeSelect = document.getElementById('edit-assignedPerson');
+    if (editAssigneeSelect) {
+        const currentSelection = editAssigneeSelect.value;
+        
+        editAssigneeSelect.innerHTML = '<option value="">Select IT Staff</option>';
+        
+        itStaff.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.id; // Store user ID instead of name
+            option.textContent = `${user.fullName} - ${user.position}`;
+            editAssigneeSelect.appendChild(option);
+        });
+        
+        if (currentSelection) {
+            editAssigneeSelect.value = currentSelection;
+        }
     }
 }
 
@@ -660,8 +917,14 @@ function displayTickets(tickets) {
         const userEmail = ticket.userEmail || 'No email';
         const userPosition = ticket.userPosition || 'No position';
         
-        // Simplified network info - removed PC name and IP collection
-        const networkInfo = `Assigned: ${escapeHtml(ticket.assignedPerson || 'Unassigned')}`;
+        // Get assigned user name from users data
+        const assignedUser = allUsers.find(user => user.id == ticket.assignedPerson);
+        const assignedDisplay = assignedUser ? 
+            `${assignedUser.fullName} - ${assignedUser.position}` : 
+            (ticket.assignedPerson || 'Unassigned');
+        
+        // Simplified network info
+        const networkInfo = `Assigned: ${escapeHtml(assignedDisplay)}`;
         
         row.innerHTML = `
             <td class="select-column">
@@ -681,7 +944,7 @@ function displayTickets(tickets) {
             <td class="priority-column">
                 <span class="priority-badge priority-${priority.toLowerCase()}">${priority}</span>
             </td>
-            <td class="assignee-column">${escapeHtml(ticket.assignedPerson || 'Unassigned')}</td>
+            <td class="assignee-column">${escapeHtml(assignedDisplay)}</td>
             <td class="requester-column" title="Email: ${userEmail}&#10;Position: ${userPosition}">
                 ${escapeHtml(accountName)}
             </td>
@@ -718,7 +981,12 @@ function editTicket(ticketId) {
     if (subjectInput) subjectInput.value = ticket.subject || '';
     if (statusSelect) statusSelect.value = ticket.ticketStatus || 'OPEN';
     if (prioritySelect) prioritySelect.value = ticket.priority || 'MEDIUM';
-    if (assignedSelect) assignedSelect.value = ticket.assignedPerson || '';
+    
+    // Set assigned person - now using user ID
+    if (assignedSelect) {
+        assignedSelect.value = ticket.assignedPerson || '';
+    }
+    
     if (originalDesc) originalDesc.textContent = ticket.intent || 'No description provided';
     if (itComment) itComment.value = ticket.itComment || '';
     
@@ -765,7 +1033,7 @@ async function saveTicketEdit() {
     const subject = document.getElementById('edit-subject')?.value;
     const status = document.getElementById('edit-status')?.value;
     const priority = document.getElementById('edit-priority')?.value;
-    const assignedPerson = document.getElementById('edit-assignedPerson')?.value;
+    const assignedPerson = document.getElementById('edit-assignedPerson')?.value; // Now stores user ID
     const itComment = document.getElementById('edit-it-comment')?.value;
 
     if (!subject || !assignedPerson) {
@@ -780,6 +1048,12 @@ async function saveTicketEdit() {
             return;
         }
 
+        // Get assigned user details for display
+        const assignedUser = allUsers.find(user => user.id == assignedPerson);
+        const assignedPersonName = assignedUser ? 
+            `${assignedUser.fullName} - ${assignedUser.position}` : 
+            'Unassigned';
+
         const response = await fetch(API_BASE + '/' + currentTicketId, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -788,7 +1062,8 @@ async function saveTicketEdit() {
                 subject: subject,
                 ticketStatus: status,
                 priority: priority,
-                assignedPerson: assignedPerson,
+                assignedPerson: assignedPerson, // Store user ID
+                assignedPersonName: assignedPersonName, // Store display name
                 itComment: itComment 
             })
         });
@@ -878,7 +1153,13 @@ function viewTicket(ticketId){
         viewPriority.innerHTML = '<span class="priority-badge priority-' + priority.toLowerCase() + '">' + priority + '</span>';
     }
     
-    if (viewAssigned) viewAssigned.textContent = ticket.assignedPerson || 'Not assigned';
+    // Get assigned user display name
+    const assignedUser = allUsers.find(user => user.id == ticket.assignedPerson);
+    const assignedDisplay = assignedUser ? 
+        `${assignedUser.fullName} - ${assignedUser.position}` : 
+        (ticket.assignedPersonName || ticket.assignedPerson || 'Not assigned');
+    
+    if (viewAssigned) viewAssigned.textContent = assignedDisplay;
     if (viewCreated) viewCreated.textContent = formatDateTime(ticket.requestedTime);
     if (viewDescription) viewDescription.textContent = ticket.intent || 'No description provided';
 
@@ -1055,7 +1336,7 @@ async function executeBulkAction() {
             case 'assign':
                 const assignee = document.getElementById('bulk-assignee')?.value;
                 if (!assignee) {
-                    showNotification('Error', 'Please enter an assignee name', 'error');
+                    showNotification('Error', 'Please select an IT staff member', 'error');
                     hideLoading();
                     return;
                 }
@@ -1093,13 +1374,23 @@ async function executeBulkAction() {
     }
 }
 
-async function bulkAssign(assignee) {
+async function bulkAssign(assigneeId) {
+    // Get assigned user details
+    const assignedUser = allUsers.find(user => user.id == assigneeId);
+    const assignedPersonName = assignedUser ? 
+        `${assignedUser.fullName} - ${assignedUser.position}` : 
+        'Unassigned';
+
     const updates = Array.from(selectedTickets).map(ticketId => {
         const ticket = allTickets.find(t => t.ticketId === ticketId);
         return fetch(API_BASE + '/' + ticketId, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...ticket, assignedPerson: assignee })
+            body: JSON.stringify({ 
+                ...ticket, 
+                assignedPerson: assigneeId,
+                assignedPersonName: assignedPersonName
+            })
         });
     });
     
@@ -1472,7 +1763,7 @@ function exportToCSV() {
             escapeHtml(ticket.intent || ''),
             ticket.ticketStatus || '',
             ticket.priority || '',
-            escapeHtml(ticket.assignedPerson || ''),
+            escapeHtml(ticket.assignedPersonName || ticket.assignedPerson || ''),
             escapeHtml(ticket.fullName || ticket.userName || ''),
             escapeHtml(ticket.userEmail || ''),
             escapeHtml(ticket.userPosition || ''),
@@ -1531,6 +1822,7 @@ async function loadUsers() {
         
         allUsers = await response.json();
         displayUsers(allUsers);
+        updateAssignmentDropdowns(); // Update assignment dropdowns after loading users
     } catch (error) {
         console.error('Error loading users:', error);
         showNotification('Error', 'Failed to load users', 'error');
@@ -1545,6 +1837,14 @@ function displayUsers(users) {
     
     users.forEach(user => {
         const row = document.createElement('tr');
+        
+        // Check if current user is super_admin to show password update button
+        const isSuperAdmin = currentUser.role === 'SUPER_ADMIN';
+        const passwordUpdateButton = isSuperAdmin ? 
+            `<button class="btn btn-small btn-warning" onclick="openPasswordUpdateModal(${user.id})" title="Update Password">
+                🔐 Update Password
+            </button>` : '';
+        
         row.innerHTML = `
             <td>${escapeHtml(user.fullName || 'N/A')}</td>
             <td>${escapeHtml(user.email || 'N/A')}</td>
@@ -1553,6 +1853,7 @@ function displayUsers(users) {
             <td>${formatDate(user.createdAt)}</td>
             <td>
                 <button class="btn btn-small btn-secondary" onclick="editUser(${user.id})">Edit</button>
+                ${passwordUpdateButton}
                 <button class="btn btn-small btn-danger" onclick="deleteUser(${user.id})">Delete</button>
             </td>
         `;
@@ -1574,6 +1875,10 @@ function openAddUserModal() {
     const form = document.getElementById('userForm');
     if (form) form.reset();
     
+    // Clear the position fields
+    document.getElementById('userPositionSearch').value = '';
+    document.getElementById('userPosition').value = '';
+    
     if (modal) {
         modal.style.display = 'block';
     }
@@ -1590,12 +1895,18 @@ function closeUserModal() {
 async function saveUser() {
     const fullName = document.getElementById('userFullName')?.value;
     const email = document.getElementById('userEmail')?.value;
-    const position = document.getElementById('userPosition')?.value;
+    const position = document.getElementById('userPosition')?.value; // From hidden field
     const role = document.getElementById('userRole')?.value;
     const password = document.getElementById('userPassword')?.value;
     
     if (!fullName || !email || !role) {
         showNotification('Error', 'Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Validate position if provided
+    if (position && !validatePosition(position)) {
+        showNotification('Error', 'Please select a valid position from the list', 'error');
         return;
     }
     
@@ -1659,6 +1970,7 @@ function editUser(userId) {
     
     document.getElementById('userFullName').value = user.fullName || '';
     document.getElementById('userEmail').value = user.email || '';
+    document.getElementById('userPositionSearch').value = user.position || '';
     document.getElementById('userPosition').value = user.position || '';
     document.getElementById('userRole').value = user.role || 'USER';
     
@@ -1724,8 +2036,92 @@ function exportUsersToCSV() {
     }
 }
 
+// Password update functionality for super_admin
+function openPasswordUpdateModal(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    
+    currentEditingUserId = userId;
+    
+    const modal = document.getElementById('passwordUpdateModal');
+    const userName = document.getElementById('password-update-user-name');
+    
+    if (userName) {
+        userName.textContent = `${user.fullName} (${user.email})`;
+    }
+    
+    // Clear the password fields
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
+function closePasswordUpdateModal() {
+    const modal = document.getElementById('passwordUpdateModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    currentEditingUserId = null;
+}
+
+async function updateUserPassword() {
+    if (!currentEditingUserId) {
+        showNotification('Error', 'No user selected for password update', 'error');
+        return;
+    }
+
+    const newPassword = document.getElementById('newPassword')?.value;
+    const confirmPassword = document.getElementById('confirmPassword')?.value;
+
+    if (!newPassword || !confirmPassword) {
+        showNotification('Error', 'Please fill in both password fields', 'error');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showNotification('Error', 'Passwords do not match', 'error');
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        showNotification('Error', 'Password must be at least 6 characters long', 'error');
+        return;
+    }
+
+    try {
+        const userData = {
+            password: newPassword
+        };
+
+        const response = await fetch(`${USERS_API}/${currentEditingUserId}/password`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (response.ok) {
+            closePasswordUpdateModal();
+            showNotification('Success', 'Password updated successfully', 'success');
+        } else {
+            const errorText = await response.text();
+            showNotification('Error', 'Failed to update password: ' + errorText, 'error');
+        }
+    } catch (error) {
+        showNotification('Error', 'Error updating password: ' + error.message, 'error');
+    }
+}
+
 window.onclick = function(event) {
-    const modals = ['editModal', 'viewModal', 'bulkModal', 'deleteModal', 'notificationModal', 'userManagementModal', 'userModal'];
+    const modals = [
+        'editModal', 'viewModal', 'bulkModal', 'deleteModal', 
+        'notificationModal', 'userManagementModal', 'userModal',
+        'passwordUpdateModal'  // Add the new modal
+    ];
     modals.forEach(modalId => {
         const modal = document.getElementById(modalId);
         if (event.target === modal) {
@@ -1733,6 +2129,7 @@ window.onclick = function(event) {
             if (modalId === 'editModal') currentTicketId = null;
             if (modalId === 'deleteModal') currentTicketId = null;
             if (modalId === 'userModal') currentEditingUserId = null;
+            if (modalId === 'passwordUpdateModal') currentEditingUserId = null;
         }
     });
 }
@@ -1777,5 +2174,16 @@ window.saveUser = saveUser;
 window.editUser = editUser;
 window.deleteUser = deleteUser;
 window.exportUsersToCSV = exportUsersToCSV;
+
+// Position dropdown functions
+window.showPositionDropdown = showPositionDropdown;
+window.hidePositionDropdown = hidePositionDropdown;
+window.filterPositions = filterPositions;
+window.selectPosition = selectPosition;
+
+// Password update functions
+window.openPasswordUpdateModal = openPasswordUpdateModal;
+window.closePasswordUpdateModal = closePasswordUpdateModal;
+window.updateUserPassword = updateUserPassword;
 
 console.log('Ticket management system with user account tracking initialized successfully');
