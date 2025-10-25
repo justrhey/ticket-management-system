@@ -15,7 +15,9 @@
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/UserService.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/dto/TicketResponse.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/Ticket.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/config/WebConfig.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/dto/TicketRegistrationRequest.java
+/home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/controller/AuthInterceptor.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/TicketValidatorService.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/controller/NetworkController.java
 /home/schnitzel/Documents/Projects/ticket-management/src/main/java/com/schnitzel/ticketingsystem/userauth/UserRepository.java

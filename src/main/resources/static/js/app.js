@@ -1,14 +1,12 @@
 const API_BASE = '/api/tickets';
-const AUTH_API = '/api/users/validate'; // New endpoint for user validation
+const AUTH_API = '/api/users/validate';
 let allTickets = [];
 let selectedSubject = '';
 
-// Enhanced network info with private IP detection
+// Network info without PC name collection
 let clientNetworkInfo = {
     publicIpAddress: 'Unknown',
     privateIpAddress: 'Unknown',
-    hostname: 'Unknown',
-    username: 'Unknown',
     userAgent: 'Unknown',
     deviceId: 'Unknown'
 };
@@ -17,19 +15,34 @@ let clientNetworkInfo = {
 document.addEventListener('DOMContentLoaded', function() {
     loadTickets();
     initializeEventListeners();
-    initializeEnhancedNetworkInfo();
+    initializeNetworkInfo();
 });
 
-// Initialize enhanced network information
-async function initializeEnhancedNetworkInfo() {
+// Safe fetch function for public endpoints
+async function safeFetch(url, options = {}) {
     try {
-        console.log('=== ENHANCED NETWORK INFO INITIALIZATION ===');
+        const response = await fetch(url, options);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return response;
+    } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+    }
+}
+
+// Initialize network information (IP only)
+async function initializeNetworkInfo() {
+    try {
+        console.log('=== NETWORK INFO INITIALIZATION ===');
         
         clientNetworkInfo.userAgent = navigator.userAgent;
         await getPublicIP();
         await getPrivateIP();
         clientNetworkInfo.deviceId = generateDeviceId();
-        await getBackendNetworkInfo();
         
         console.log('Final Network Info:', clientNetworkInfo);
         localStorage.setItem('clientNetworkInfo', JSON.stringify(clientNetworkInfo));
@@ -38,70 +51,6 @@ async function initializeEnhancedNetworkInfo() {
     } catch (error) {
         console.error('Error initializing network info:', error);
     }
-}
-
-// Get backend-detected network information
-async function getBackendNetworkInfo() {
-    try {
-        console.log('Fetching backend network info...');
-        const response = await fetch('/api/network/info');
-        
-        if (response.ok) {
-            const backendInfo = await response.json();
-            console.log('Backend network info received:', backendInfo);
-            
-            if (backendInfo.computerName && 
-                backendInfo.computerName !== 'Unknown-Host' && 
-                backendInfo.computerName !== 'localhost') {
-                clientNetworkInfo.hostname = backendInfo.computerName;
-            } else {
-                clientNetworkInfo.hostname = await getBrowserComputerName();
-            }
-            
-            if (backendInfo.userName && 
-                backendInfo.userName !== 'Unknown-User' &&
-                backendInfo.userName !== 'Netscape') {
-                clientNetworkInfo.username = backendInfo.userName;
-            } else {
-                clientNetworkInfo.username = await getClientUsername();
-            }
-            
-        } else {
-            clientNetworkInfo.hostname = await getBrowserComputerName();
-            clientNetworkInfo.username = await getClientUsername();
-        }
-    } catch (error) {
-        console.error('Failed to get backend network info:', error);
-        clientNetworkInfo.hostname = await getBrowserComputerName();
-        clientNetworkInfo.username = await getClientUsername();
-    }
-}
-
-// Get computer name from browser
-async function getBrowserComputerName() {
-    const stored = localStorage.getItem('computerName');
-    if (stored && stored !== 'Unknown' && stored !== 'localhost') {
-        return stored;
-    }
-    
-    const hostname = window.location.hostname;
-    if (hostname && hostname !== 'localhost' && !hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) {
-        return hostname;
-    }
-    
-    const computerName = prompt(
-        'Please enter your computer name for ticket tracking:\n\n' +
-        'Windows: Press Win+R, type "cmd", then type "hostname"\n' +
-        'Mac: Open Terminal and type "hostname"'
-    );
-    
-    if (computerName && computerName.trim().length > 0) {
-        const cleanName = computerName.trim();
-        localStorage.setItem('computerName', cleanName);
-        return cleanName;
-    }
-    
-    return 'Unknown-Computer';
 }
 
 // Get public IP address
@@ -242,24 +191,6 @@ function generateDeviceId() {
     return 'device_' + Math.abs(hash).toString(16);
 }
 
-// Get client username
-async function getClientUsername() {
-    const stored = localStorage.getItem('clientUsername');
-    if (stored && stored !== 'Unknown' && stored !== 'Unknown-User' && stored !== 'Netscape') {
-        return stored;
-    }
-    
-    const userName = prompt('Please enter your name for ticket tracking:');
-    
-    if (userName && userName.trim().length > 0) {
-        const cleanUsername = userName.trim();
-        localStorage.setItem('clientUsername', cleanUsername);
-        return cleanUsername;
-    }
-    
-    return 'Unknown-User';
-}
-
 // Get current network info
 function getNetworkInfo() {
     return clientNetworkInfo;
@@ -272,16 +203,12 @@ function updateNetworkInfoLabel() {
         const networkInfo = getNetworkInfo();
         const publicIP = networkInfo.publicIpAddress || 'Unknown';
         const privateIP = networkInfo.privateIpAddress || 'Unknown';
-        const computer = networkInfo.hostname || 'Unknown';
-        const username = networkInfo.username || 'Unknown';
         
         networkInfoLabel.innerHTML = `
             <div style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; border: 1px solid #e9ecef; font-size: 0.9em;">
                 <strong>📡 Network Info:</strong> 
                 Public IP: ${escapeHtml(publicIP)} | 
-                Private IP: ${escapeHtml(privateIP)} | 
-                Computer: ${escapeHtml(computer)} |
-                User: ${escapeHtml(username)}
+                Private IP: ${escapeHtml(privateIP)}
             </div>
         `;
     }
@@ -378,8 +305,6 @@ async function validateAndCreateTicket() {
             assignedPerson: assignedPerson || '',
             clientIpAddress: networkInfo.publicIpAddress,
             privateIpAddress: networkInfo.privateIpAddress,
-            computerName: networkInfo.hostname,
-            userName: networkInfo.username,
             userAgent: networkInfo.userAgent,
             deviceId: networkInfo.deviceId
         };
@@ -394,7 +319,7 @@ async function validateAndCreateTicket() {
     }
 }
 
-// NEW: Validate user credentials with backend
+// Validate user credentials with backend
 async function validateUserCredentials(email, password) {
     try {
         const response = await fetch(AUTH_API, {
@@ -421,13 +346,13 @@ async function validateUserCredentials(email, password) {
     }
 }
 
-// NEW: Show authentication error
+// Show authentication error
 function showAuthError() {
     const errorElement = document.getElementById('auth-error');
     errorElement.classList.remove('hidden');
 }
 
-// NEW: Hide authentication error
+// Hide authentication error
 function hideAuthError() {
     const errorElement = document.getElementById('auth-error');
     errorElement.classList.add('hidden');
@@ -468,13 +393,10 @@ function closeSuccessModal() {
     closeCreateModal();
 }
 
-// API Functions
+// API Functions - NO AUTH REQUIRED for viewing
 async function loadTickets() {
     try {
-        const response = await fetch(API_BASE);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const response = await safeFetch(API_BASE);
         allTickets = await response.json();
         console.log('Loaded tickets:', allTickets);
         displayTickets(allTickets);
@@ -508,7 +430,7 @@ function displayTickets(tickets) {
     tickets.forEach(ticket => {
         const ticketElement = document.createElement('div');
         ticketElement.className = 'ticket-item';
-        ticketElement.style.cursor = 'pointer'; // Make it clickable
+        ticketElement.style.cursor = 'pointer';
         
         const networkInfo = [];
         if (ticket.clientIpAddress && ticket.clientIpAddress !== 'Unknown') {
@@ -516,12 +438,6 @@ function displayTickets(tickets) {
         }
         if (ticket.privateIpAddress && ticket.privateIpAddress !== 'Unknown') {
             networkInfo.push(`Private IP: ${ticket.privateIpAddress}`);
-        }
-        if (ticket.computerName && ticket.computerName !== 'Unknown') {
-            networkInfo.push(`Computer: ${ticket.computerName}`);
-        }
-        if (ticket.userName && ticket.userName !== 'Unknown') {
-            networkInfo.push(`User: ${ticket.userName}`);
         }
         
         const networkInfoText = networkInfo.length > 0 ? 
@@ -540,7 +456,6 @@ function displayTickets(tickets) {
             <div>${formatDate(ticket.requestedTime)}</div>
         `;
         
-        // Change from alert to view modal
         ticketElement.addEventListener('click', () => viewTicketDetails(ticket));
         ticketList.appendChild(ticketElement);
     });
@@ -615,19 +530,9 @@ async function searchTickets() {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/search?query=${encodeURIComponent(query)}`);
-        if (response.ok) {
-            const tickets = await response.json();
-            displayTickets(tickets);
-        } else {
-            const filteredTickets = allTickets.filter(ticket => 
-                (ticket.subject && ticket.subject.toLowerCase().includes(query.toLowerCase())) ||
-                (ticket.userEmail && ticket.userEmail.toLowerCase().includes(query.toLowerCase())) ||
-                (ticket.intent && ticket.intent.toLowerCase().includes(query.toLowerCase())) ||
-                (ticket.priority && ticket.priority.toLowerCase().includes(query.toLowerCase()))
-            );
-            displayTickets(filteredTickets);
-        }
+        const response = await safeFetch(`${API_BASE}/search?query=${encodeURIComponent(query)}`);
+        const tickets = await response.json();
+        displayTickets(tickets);
     } catch (error) {
         console.error('Error searching tickets:', error);
         const filteredTickets = allTickets.filter(ticket => 
@@ -654,8 +559,6 @@ function viewTicketDetails(ticket) {
     const viewDescription = document.getElementById('view-description');
     const viewIp = document.getElementById('view-ip');
     const viewPrivateIp = document.getElementById('view-private-ip');
-    const viewComputer = document.getElementById('view-computer');
-    const viewUsername = document.getElementById('view-username');
     const viewItComment = document.getElementById('view-it-comment');
     const viewUpdated = document.getElementById('view-updated');
 
@@ -671,8 +574,6 @@ function viewTicketDetails(ticket) {
     if (viewDescription) viewDescription.textContent = ticket.intent || 'No description provided';
     if (viewIp) viewIp.textContent = ticket.clientIpAddress || 'Unknown';
     if (viewPrivateIp) viewPrivateIp.textContent = ticket.privateIpAddress || 'Unknown';
-    if (viewComputer) viewComputer.textContent = ticket.computerName || 'Unknown';
-    if (viewUsername) viewUsername.textContent = ticket.userName || 'Unknown';
 
     // Populate requester details
     if (viewRequesterDetails) {
@@ -729,25 +630,6 @@ function closeViewModal() {
     }
 }
 
-function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    try {
-        return new Date(dateString).toLocaleDateString();
-    } catch (e) {
-        return 'Invalid Date';
-    }
-}
-
-function escapeHtml(unsafe) {
-    if (!unsafe) return '';
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
 // Simple notification function
 function showNotification(message) {
     alert(message);
@@ -764,4 +646,4 @@ window.viewTicketDetails = viewTicketDetails;
 window.openViewModal = openViewModal;
 window.closeViewModal = closeViewModal;
 
-console.log('Ticket creation system with user authentication initialized successfully');
+console.log('Ticket system initialized - public viewing, authenticated submission');

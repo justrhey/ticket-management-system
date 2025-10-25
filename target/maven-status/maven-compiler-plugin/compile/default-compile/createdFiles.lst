@@ -16,6 +16,8 @@ com/schnitzel/ticketingsystem/TicketValidatorService.class
 com/schnitzel/ticketingsystem/Ticket.class
 com/schnitzel/ticketingsystem/userauth/User.class
 com/schnitzel/ticketingsystem/userauth/UserService.class
+com/schnitzel/ticketingsystem/controller/AuthInterceptor.class
+com/schnitzel/ticketingsystem/config/WebConfig.class
 com/schnitzel/ticketingsystem/service/EmailService.class
 com/schnitzel/ticketingsystem/controller/WebController.class
 com/schnitzel/ticketingsystem/controller/NetworkController.class

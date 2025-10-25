@@ -581,10 +581,7 @@ function applyFiltersAndSort() {
             (ticket.fullName && ticket.fullName.toLowerCase().includes(query)) ||
             (ticket.userEmail && ticket.userEmail.toLowerCase().includes(query)) ||
             (ticket.intent && ticket.intent.toLowerCase().includes(query)) ||
-            (ticket.assignedPerson && ticket.assignedPerson.toLowerCase().includes(query)) ||
-            (ticket.userName && ticket.userName.toLowerCase().includes(query)) ||
-            (ticket.computerName && ticket.computerName.toLowerCase().includes(query)) ||
-            (ticket.privateIpAddress && ticket.privateIpAddress.toLowerCase().includes(query))
+            (ticket.assignedPerson && ticket.assignedPerson.toLowerCase().includes(query))
         );
     }
     
@@ -663,13 +660,8 @@ function displayTickets(tickets) {
         const userEmail = ticket.userEmail || 'No email';
         const userPosition = ticket.userPosition || 'No position';
         
-        const networkInfo = [
-            `Public IP: ${escapeHtml(ticket.clientIpAddress || 'Unknown')}`,
-            `Private IP: ${escapeHtml(ticket.privateIpAddress || 'Unknown')}`,
-            `Computer: ${escapeHtml(ticket.computerName || 'Unknown')}`,
-            `User: ${escapeHtml(accountName)}`,
-            `Assign: ${escapeHtml(ticket.assignedPerson || 'Unassigned')}`
-        ].filter(info => !info.includes('Unknown')).join(' | ');
+        // Simplified network info - removed PC name and IP collection
+        const networkInfo = `Assigned: ${escapeHtml(ticket.assignedPerson || 'Unassigned')}`;
         
         row.innerHTML = `
             <td class="select-column">
@@ -841,13 +833,7 @@ function viewTicket(ticketId){
     const viewAssigned = document.getElementById('view-assigned');
     const viewCreated = document.getElementById('view-created');
     const viewDescription = document.getElementById('view-description');
-    const viewIp = document.getElementById('view-ip');
-    const viewPrivateIp = document.getElementById('view-private-ip');
-    const viewComputer = document.getElementById('view-computer');
-    const viewUseragent = document.getElementById('view-useragent');
     const viewItComment = document.getElementById('view-it-comment');
-    const viewUsername = document.getElementById('view-username');
-    const viewDeviceId = document.getElementById('view-device-id');
     const viewUpdated = document.getElementById('view-updated');
     const viewOpenedTime = document.getElementById('view-opened-time');
     const viewClosedTime = document.getElementById('view-closed-time');
@@ -895,12 +881,6 @@ function viewTicket(ticketId){
     if (viewAssigned) viewAssigned.textContent = ticket.assignedPerson || 'Not assigned';
     if (viewCreated) viewCreated.textContent = formatDateTime(ticket.requestedTime);
     if (viewDescription) viewDescription.textContent = ticket.intent || 'No description provided';
-    if (viewIp) viewIp.textContent = ticket.clientIpAddress || 'Unknown';
-    if (viewPrivateIp) viewPrivateIp.textContent = ticket.privateIpAddress || 'Unknown';
-    if (viewComputer) viewComputer.textContent = ticket.computerName || 'Unknown';
-    if (viewUseragent) viewUseragent.textContent = ticket.userAgent || 'Unknown';
-    if (viewUsername) viewUsername.textContent = accountName;
-    if (viewDeviceId) viewDeviceId.textContent = ticket.deviceId || 'Unknown';
 
     if (viewItComment) {
         const itComment = ticket.itComment || 'No IT comments yet.';
@@ -1485,7 +1465,7 @@ function refreshTable() {
 
 function exportToCSV() {
     try {
-        const headers = ['ID', 'Subject', 'Description', 'Status', 'Priority', 'Assigned To', 'Requester', 'Requester Email', 'Requester Position', 'Created Date', 'IP Address', 'Computer Name'];
+        const headers = ['ID', 'Subject', 'Description', 'Status', 'Priority', 'Assigned To', 'Requester', 'Requester Email', 'Requester Position', 'Created Date'];
         const csvData = allTickets.map(ticket => [
             ticket.ticketId,
             escapeHtml(ticket.subject || ''),
@@ -1496,9 +1476,7 @@ function exportToCSV() {
             escapeHtml(ticket.fullName || ticket.userName || ''),
             escapeHtml(ticket.userEmail || ''),
             escapeHtml(ticket.userPosition || ''),
-            formatDateTime(ticket.requestedTime),
-            ticket.clientIpAddress || '',
-            ticket.computerName || ''
+            formatDateTime(ticket.requestedTime)
         ]);
         
         const csvContent = [
