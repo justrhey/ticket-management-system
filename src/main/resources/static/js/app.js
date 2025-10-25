@@ -508,6 +508,7 @@ function displayTickets(tickets) {
     tickets.forEach(ticket => {
         const ticketElement = document.createElement('div');
         ticketElement.className = 'ticket-item';
+        ticketElement.style.cursor = 'pointer'; // Make it clickable
         
         const networkInfo = [];
         if (ticket.clientIpAddress && ticket.clientIpAddress !== 'Unknown') {
@@ -533,11 +534,13 @@ function displayTickets(tickets) {
                 <div style="font-size: 0.9em; color: #666;">${escapeHtml(ticket.intent || 'No description')}</div>
                 ${networkInfoText}
             </div>
-            <div>${escapeHtml(ticket.fullName)}</div>  <!-- This now shows the email -->
+            <div>${escapeHtml(ticket.fullName)}</div>
             <div class="status-badge status-${(ticket.ticketStatus || 'OPEN').toLowerCase()}">${ticket.ticketStatus || 'OPEN'}</div>
             <div class="priority-badge priority-${(ticket.priority || 'MEDIUM').toLowerCase()}">${ticket.priority || 'MEDIUM'}</div>
             <div>${formatDate(ticket.requestedTime)}</div>
         `;
+        
+        // Change from alert to view modal
         ticketElement.addEventListener('click', () => viewTicketDetails(ticket));
         ticketList.appendChild(ticketElement);
     });
@@ -574,6 +577,36 @@ async function createTicket(ticketData) {
     }
 }
 
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        return new Date(dateString).toLocaleDateString();
+    } catch (e) {
+        return 'Invalid Date';
+    }
+}
+
+function formatDateTime(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleString();
+    } catch (e) {
+        console.error('Error formatting date:', e);
+        return 'Invalid Date';
+    }
+}
+
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 async function searchTickets() {
     const query = document.getElementById('searchInput').value.trim();
     if (query === '') {
@@ -607,24 +640,9 @@ async function searchTickets() {
     }
 }
 
-function viewTicket(ticketId){
-    console.log('View Ticket clicked ' + ticketId);
+function viewTicketDetails(ticket) {
+    console.log('Viewing ticket details:', ticket);
     
-    if (!ticketId) {
-        console.error('No ticket ID provided to view');
-        return;
-    }
-    
-    const ticket = allTickets.find(t => t.ticketId === ticketId);
-    console.log('Found Ticket:', ticket);
-    
-    if (!ticket) {
-        console.error('Ticket not found: ' + ticketId);
-        console.log('Available Ticket IDs:', allTickets.map(t => t.ticketId));
-        showNotification('Error', 'Ticket not found', 'error');
-        return;
-    }
-
     const viewId = document.getElementById('view-id');
     const viewSubject = document.getElementById('view-subject');
     const viewRequester = document.getElementById('view-requester');
@@ -637,63 +655,34 @@ function viewTicket(ticketId){
     const viewIp = document.getElementById('view-ip');
     const viewPrivateIp = document.getElementById('view-private-ip');
     const viewComputer = document.getElementById('view-computer');
-    const viewUseragent = document.getElementById('view-useragent');
-    const viewItComment = document.getElementById('view-it-comment');
     const viewUsername = document.getElementById('view-username');
-    const viewDeviceId = document.getElementById('view-device-id');
+    const viewItComment = document.getElementById('view-it-comment');
     const viewUpdated = document.getElementById('view-updated');
-    const viewOpenedTime = document.getElementById('view-opened-time');
-    const viewClosedTime = document.getElementById('view-closed-time');
-    const viewResolutionTime = document.getElementById('view-resolution-time');
-    const viewResolutionTimeContainer = document.getElementById('view-resolution-time-container');
 
-    if (viewUpdated) viewUpdated.textContent = formatDateTime(ticket.updatedTime || ticket.requestedTime);
-    if (viewOpenedTime) viewOpenedTime.textContent = formatDateTime(ticket.openedTime || ticket.requestedTime);
-    if (viewClosedTime) viewClosedTime.textContent = ticket.closedTime ? formatDateTime(ticket.closedTime) : 'Not closed yet';
-    
-    // Calculate and display resolution time
-    if (ticket.resolvedTime && ticket.openedTime) {
-        const resolutionTime = calculateTimeDifference(ticket.openedTime, ticket.resolvedTime);
-        if (viewResolutionTime) viewResolutionTime.textContent = resolutionTime;
-        if (viewResolutionTimeContainer) viewResolutionTimeContainer.style.display = 'block';
-    } else {
-        if (viewResolutionTimeContainer) viewResolutionTimeContainer.style.display = 'none';
-    }
-
+    // Populate basic ticket information
     if (viewId) viewId.textContent = '#' + ticket.ticketId;
     if (viewSubject) viewSubject.textContent = ticket.subject || 'No subject';
-    
-    const accountName = ticket.fullName || ticket.userName || 'Unknown User';
-    const userEmail = ticket.userEmail || 'No email';
-    const userPosition = ticket.userPosition || 'No position';
-    
-    if (viewRequester) viewRequester.textContent = accountName;
+    if (viewRequester) viewRequester.textContent = ticket.fullName || ticket.userEmail || 'Unknown';
+    if (viewStatus) viewStatus.textContent = ticket.ticketStatus || 'OPEN';
+    if (viewPriority) viewPriority.textContent = ticket.priority || 'MEDIUM';
+    if (viewAssigned) viewAssigned.textContent = ticket.assignedPerson || 'Not assigned';
+    if (viewCreated) viewCreated.textContent = formatDateTime(ticket.requestedTime);
+    if (viewUpdated) viewUpdated.textContent = formatDateTime(ticket.updatedTime || ticket.requestedTime);
+    if (viewDescription) viewDescription.textContent = ticket.intent || 'No description provided';
+    if (viewIp) viewIp.textContent = ticket.clientIpAddress || 'Unknown';
+    if (viewPrivateIp) viewPrivateIp.textContent = ticket.privateIpAddress || 'Unknown';
+    if (viewComputer) viewComputer.textContent = ticket.computerName || 'Unknown';
+    if (viewUsername) viewUsername.textContent = ticket.userName || 'Unknown';
+
+    // Populate requester details
     if (viewRequesterDetails) {
+        const userEmail = ticket.userEmail || 'No email';
+        const userPosition = ticket.userPosition || 'No position';
         viewRequesterDetails.innerHTML = `
             <strong>Email:</strong> ${escapeHtml(userEmail)}<br>
             <strong>Position:</strong> ${escapeHtml(userPosition)}
         `;
     }
-    
-    if (viewStatus) {
-        const status = ticket.ticketStatus || 'OPEN';
-        viewStatus.innerHTML = '<span class="status-badge status-' + status.toLowerCase() + '">' + status + '</span>';
-    }
-    
-    if (viewPriority) {
-        const priority = ticket.priority || 'MEDIUM';
-        viewPriority.innerHTML = '<span class="priority-badge priority-' + priority.toLowerCase() + '">' + priority + '</span>';
-    }
-    
-    if (viewAssigned) viewAssigned.textContent = ticket.assignedPerson || 'Not assigned';
-    if (viewCreated) viewCreated.textContent = formatDateTime(ticket.requestedTime);
-    if (viewDescription) viewDescription.textContent = ticket.intent || 'No description provided';
-    if (viewIp) viewIp.textContent = ticket.clientIpAddress || 'Unknown';
-    if (viewPrivateIp) viewPrivateIp.textContent = ticket.privateIpAddress || 'Unknown';
-    if (viewComputer) viewComputer.textContent = ticket.computerName || 'Unknown';
-    if (viewUseragent) viewUseragent.textContent = ticket.userAgent || 'Unknown';
-    if (viewUsername) viewUsername.textContent = accountName;
-    if (viewDeviceId) viewDeviceId.textContent = ticket.deviceId || 'Unknown';
 
     // IT Comment display - READ ONLY
     if (viewItComment) {
@@ -721,14 +710,23 @@ function viewTicket(ticketId){
             viewItComment.style.fontStyle = 'italic';
             viewItComment.style.border = '1px dashed #dee2e6';
         }
-        
-        // Ensure it's not editable
-        viewItComment.readOnly = true;
-        viewItComment.style.cursor = 'default';
-        viewItComment.style.userSelect = 'text'; // Allow text selection for reading
     }
 
     openViewModal();
+}
+
+function openViewModal() {
+    const modal = document.getElementById('viewModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
+function closeViewModal() {
+    const modal = document.getElementById('viewModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
 function formatDate(dateString) {
@@ -762,5 +760,8 @@ window.selectCategory = selectCategory;
 window.validateAndCreateTicket = validateAndCreateTicket;
 window.closeSuccessModal = closeSuccessModal;
 window.searchTickets = searchTickets;
+window.viewTicketDetails = viewTicketDetails;
+window.openViewModal = openViewModal;
+window.closeViewModal = closeViewModal;
 
 console.log('Ticket creation system with user authentication initialized successfully');

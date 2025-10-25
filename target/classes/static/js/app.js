@@ -508,6 +508,7 @@ function displayTickets(tickets) {
     tickets.forEach(ticket => {
         const ticketElement = document.createElement('div');
         ticketElement.className = 'ticket-item';
+        ticketElement.style.cursor = 'pointer'; // Make it clickable
         
         const networkInfo = [];
         if (ticket.clientIpAddress && ticket.clientIpAddress !== 'Unknown') {
@@ -533,11 +534,13 @@ function displayTickets(tickets) {
                 <div style="font-size: 0.9em; color: #666;">${escapeHtml(ticket.intent || 'No description')}</div>
                 ${networkInfoText}
             </div>
-            <div>${escapeHtml(ticket.fullName)}</div>  <!-- This now shows the email -->
+            <div>${escapeHtml(ticket.fullName)}</div>
             <div class="status-badge status-${(ticket.ticketStatus || 'OPEN').toLowerCase()}">${ticket.ticketStatus || 'OPEN'}</div>
             <div class="priority-badge priority-${(ticket.priority || 'MEDIUM').toLowerCase()}">${ticket.priority || 'MEDIUM'}</div>
             <div>${formatDate(ticket.requestedTime)}</div>
         `;
+        
+        // Change from alert to view modal
         ticketElement.addEventListener('click', () => viewTicketDetails(ticket));
         ticketList.appendChild(ticketElement);
     });
@@ -574,6 +577,36 @@ async function createTicket(ticketData) {
     }
 }
 
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        return new Date(dateString).toLocaleDateString();
+    } catch (e) {
+        return 'Invalid Date';
+    }
+}
+
+function formatDateTime(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleString();
+    } catch (e) {
+        console.error('Error formatting date:', e);
+        return 'Invalid Date';
+    }
+}
+
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 async function searchTickets() {
     const query = document.getElementById('searchInput').value.trim();
     if (query === '') {
@@ -608,30 +641,92 @@ async function searchTickets() {
 }
 
 function viewTicketDetails(ticket) {
-    const createdDate = ticket.requestedTime ? new Date(ticket.requestedTime).toLocaleString() : 'Unknown';
-    const priority = ticket.priority || 'Not specified';
+    console.log('Viewing ticket details:', ticket);
     
-    let details = `Ticket Details:\n\nID: #${ticket.ticketId}\nSubject: ${ticket.subject}\nRequester: ${ticket.userEmail || ticket.fullName || 'Unknown'}\nStatus: ${ticket.ticketStatus}\nPriority: ${priority}\nDescription: ${ticket.intent}\nAssigned To: ${ticket.assignedPerson || 'Not assigned'}\nCreated: ${createdDate}`;
-    
-    const networkInfo = [];
-    if (ticket.clientIpAddress && ticket.clientIpAddress !== 'Unknown') {
-        networkInfo.push(`Public IP: ${ticket.clientIpAddress}`);
+    const viewId = document.getElementById('view-id');
+    const viewSubject = document.getElementById('view-subject');
+    const viewRequester = document.getElementById('view-requester');
+    const viewRequesterDetails = document.getElementById('view-requester-details');
+    const viewStatus = document.getElementById('view-status');
+    const viewPriority = document.getElementById('view-priority');
+    const viewAssigned = document.getElementById('view-assigned');
+    const viewCreated = document.getElementById('view-created');
+    const viewDescription = document.getElementById('view-description');
+    const viewIp = document.getElementById('view-ip');
+    const viewPrivateIp = document.getElementById('view-private-ip');
+    const viewComputer = document.getElementById('view-computer');
+    const viewUsername = document.getElementById('view-username');
+    const viewItComment = document.getElementById('view-it-comment');
+    const viewUpdated = document.getElementById('view-updated');
+
+    // Populate basic ticket information
+    if (viewId) viewId.textContent = '#' + ticket.ticketId;
+    if (viewSubject) viewSubject.textContent = ticket.subject || 'No subject';
+    if (viewRequester) viewRequester.textContent = ticket.fullName || ticket.userEmail || 'Unknown';
+    if (viewStatus) viewStatus.textContent = ticket.ticketStatus || 'OPEN';
+    if (viewPriority) viewPriority.textContent = ticket.priority || 'MEDIUM';
+    if (viewAssigned) viewAssigned.textContent = ticket.assignedPerson || 'Not assigned';
+    if (viewCreated) viewCreated.textContent = formatDateTime(ticket.requestedTime);
+    if (viewUpdated) viewUpdated.textContent = formatDateTime(ticket.updatedTime || ticket.requestedTime);
+    if (viewDescription) viewDescription.textContent = ticket.intent || 'No description provided';
+    if (viewIp) viewIp.textContent = ticket.clientIpAddress || 'Unknown';
+    if (viewPrivateIp) viewPrivateIp.textContent = ticket.privateIpAddress || 'Unknown';
+    if (viewComputer) viewComputer.textContent = ticket.computerName || 'Unknown';
+    if (viewUsername) viewUsername.textContent = ticket.userName || 'Unknown';
+
+    // Populate requester details
+    if (viewRequesterDetails) {
+        const userEmail = ticket.userEmail || 'No email';
+        const userPosition = ticket.userPosition || 'No position';
+        viewRequesterDetails.innerHTML = `
+            <strong>Email:</strong> ${escapeHtml(userEmail)}<br>
+            <strong>Position:</strong> ${escapeHtml(userPosition)}
+        `;
     }
-    if (ticket.privateIpAddress && ticket.privateIpAddress !== 'Unknown') {
-        networkInfo.push(`Private IP: ${ticket.privateIpAddress}`);
+
+    // IT Comment display - READ ONLY
+    if (viewItComment) {
+        const itComment = ticket.itComment || 'No IT comments yet.';
+        viewItComment.textContent = itComment;
+        
+        // Enhanced styling for IT comments section
+        if (itComment && itComment !== 'No IT comments yet.' && itComment.trim() !== '') {
+            viewItComment.style.background = '#f8f9fa';
+            viewItComment.style.padding = '12px';
+            viewItComment.style.borderRadius = '4px';
+            viewItComment.style.borderLeft = '4px solid #0041d8';
+            viewItComment.style.whiteSpace = 'pre-wrap';
+            viewItComment.style.wordWrap = 'break-word';
+            viewItComment.style.minHeight = '60px';
+            viewItComment.style.fontFamily = 'monospace';
+            viewItComment.style.fontSize = '0.9em';
+            viewItComment.style.border = '1px solid #dee2e6';
+        } else {
+            viewItComment.style.background = '#f5f5f5';
+            viewItComment.style.padding = '12px';
+            viewItComment.style.borderRadius = '4px';
+            viewItComment.style.borderLeft = '4px solid #6c757d';
+            viewItComment.style.color = '#6c757d';
+            viewItComment.style.fontStyle = 'italic';
+            viewItComment.style.border = '1px dashed #dee2e6';
+        }
     }
-    if (ticket.computerName && ticket.computerName !== 'Unknown') {
-        networkInfo.push(`Computer: ${ticket.computerName}`);
+
+    openViewModal();
+}
+
+function openViewModal() {
+    const modal = document.getElementById('viewModal');
+    if (modal) {
+        modal.style.display = 'block';
     }
-    if (ticket.userName && ticket.userName !== 'Unknown') {
-        networkInfo.push(`User: ${ticket.userName}`);
+}
+
+function closeViewModal() {
+    const modal = document.getElementById('viewModal');
+    if (modal) {
+        modal.style.display = 'none';
     }
-    
-    if (networkInfo.length > 0) {
-        details += `\n\nNetwork Information:\n${networkInfo.join('\n')}`;
-    }
-    
-    alert(details);
 }
 
 function formatDate(dateString) {
@@ -665,5 +760,8 @@ window.selectCategory = selectCategory;
 window.validateAndCreateTicket = validateAndCreateTicket;
 window.closeSuccessModal = closeSuccessModal;
 window.searchTickets = searchTickets;
+window.viewTicketDetails = viewTicketDetails;
+window.openViewModal = openViewModal;
+window.closeViewModal = closeViewModal;
 
 console.log('Ticket creation system with user authentication initialized successfully');

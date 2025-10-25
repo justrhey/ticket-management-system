@@ -527,4 +527,247 @@ setInterval(() => {
     loadRecentTickets();
 }, 30000);
 
+// ===== COMPACT CALENDAR WITH STATS =====
+function initializeCalendar() {
+    renderCalendar();
+    updateCalendarStats(); // Initial stats update
+}
+
+function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    // Update month display
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    document.getElementById('calendarMonth').textContent = `${monthNames[month]} ${year}`;
+    
+    // Get first day of month and number of days
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    
+    // Add day headers (very compact)
+    const dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    dayHeaders.forEach(day => {
+        const header = document.createElement('div');
+        header.className = 'calendar-day-header';
+        header.textContent = day;
+        grid.appendChild(header);
+    });
+    
+    // Add empty cells for days before month starts
+    for (let i = 0; i < firstDay; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.className = 'calendar-day disabled';
+        grid.appendChild(emptyDay);
+    }
+    
+    // Add days of month with stats
+    const today = new Date();
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'calendar-day';
+        
+        const date = new Date(year, month, day);
+        const dateString = date.toDateString();
+        const dayStats = getDayStats(dateString);
+        
+        // Create compact content with stats
+        dayCell.innerHTML = `
+            <div class="calendar-day-number">${day}</div>
+            <div class="calendar-day-stats">
+                ${dayStats.open > 0 ? `<span class="stat-dot open" title="${dayStats.open} open"></span>` : ''}
+                ${dayStats.closed > 0 ? `<span class="stat-dot closed" title="${dayStats.closed} closed"></span>` : ''}
+            </div>
+        `;
+        
+        // Check if today
+        if (year === today.getFullYear() && 
+            month === today.getMonth() && 
+            day === today.getDate()) {
+            dayCell.classList.add('today');
+        }
+        
+        // Check if selected
+        if (selectedDate && 
+            year === selectedDate.getFullYear() && 
+            month === selectedDate.getMonth() && 
+            day === selectedDate.getDate()) {
+            dayCell.classList.add('selected');
+        }
+        
+        dayCell.onclick = () => selectDate(year, month, day);
+        grid.appendChild(dayCell);
+    }
+}
+
+function getDayStats(dateString) {
+    if (!ticketsData || ticketsData.length === 0) {
+        return { open: 0, closed: 0, total: 0 };
+    }
+    
+    const dayTickets = ticketsData.filter(ticket => 
+        new Date(ticket.requestedTime).toDateString() === dateString
+    );
+    
+    const open = dayTickets.filter(t => 
+        t.ticketStatus && t.ticketStatus.toLowerCase() === 'open'
+    ).length;
+    
+    const closed = dayTickets.filter(t => 
+        t.ticketStatus && t.ticketStatus.toLowerCase() === 'closed'
+    ).length;
+    
+    return {
+        open: open,
+        closed: closed,
+        total: dayTickets.length
+    };
+}
+
+function updateCalendarStats() {
+    // Update the stats for all visible days
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateString = date.toDateString();
+        const dayStats = getDayStats(dateString);
+        
+        // Find the day cell and update stats
+        const dayCells = document.querySelectorAll('.calendar-day');
+        const dayCell = dayCells[6 + day - 1]; // 6 headers + day - 1 (0-indexed)
+        
+        if (dayCell && !dayCell.classList.contains('disabled')) {
+            const statsContainer = dayCell.querySelector('.calendar-day-stats');
+            if (statsContainer) {
+                statsContainer.innerHTML = `
+                    ${dayStats.open > 0 ? `<span class="stat-dot open" title="${dayStats.open} open"></span>` : ''}
+                    ${dayStats.closed > 0 ? `<span class="stat-dot closed" title="${dayStats.closed} closed"></span>` : ''}
+                `;
+            }
+        }
+    }
+}
+
+function selectDate(year, month, day) {
+    selectedDate = new Date(year, month, day);
+    renderCalendar();
+    
+    // Show stats for selected date
+    showDateStats(selectedDate);
+}
+
+function showDateStats(date) {
+    const dateString = date.toDateString();
+    const dayStats = getDayStats(dateString);
+    
+    // Create and show stats card
+    const statsCard = createDateStatsCard(date, dayStats);
+    
+    // Remove existing stats card if any
+    const existingCard = document.querySelector('.date-stats-card');
+    if (existingCard) {
+        existingCard.remove();
+    }
+    
+    // Insert after calendar
+    const calendarContainer = document.querySelector('.calendar-container');
+    calendarContainer.appendChild(statsCard);
+    
+    // Filter tickets for the selected date
+    filterTicketsByDate(date);
+}
+
+function createDateStatsCard(date, stats) {
+    const card = document.createElement('div');
+    card.className = 'date-stats-card';
+    
+    const dateFormatted = date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+    
+    card.innerHTML = `
+        <div class="date-stats-header">
+            <h4>${dateFormatted}</h4>
+            <button class="btn-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+        <div class="date-stats-grid">
+            <div class="date-stat">
+                <div class="date-stat-value">${stats.total}</div>
+                <div class="date-stat-label">Total</div>
+            </div>
+            <div class="date-stat">
+                <div class="date-stat-value open">${stats.open}</div>
+                <div class="date-stat-label">Open</div>
+            </div>
+            <div class="date-stat">
+                <div class="date-stat-value closed">${stats.closed}</div>
+                <div class="date-stat-label">Closed</div>
+            </div>
+        </div>
+    `;
+    
+    return card;
+}
+
+function filterTicketsByDate(date) {
+    const dateString = date.toDateString();
+    const filteredTickets = ticketsData.filter(ticket => 
+        new Date(ticket.requestedTime).toDateString() === dateString
+    );
+    
+    displayRecentTickets(filteredTickets);
+    
+    // Update the activity header to show date
+    const activityHeader = document.querySelector('.recent-activity .section-header h2');
+    if (activityHeader && filteredTickets.length > 0) {
+        const dateFormatted = date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        activityHeader.textContent = `Tickets on ${dateFormatted}`;
+    }
+}
+
+function previousMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+    updateCalendarStats();
+}
+
+function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+    updateCalendarStats();
+}
+
+// Update calendar stats when dashboard data loads
+async function loadDashboardData() {
+    try {
+        const response = await fetch('/api/tickets');
+        if (!response.ok) {
+            throw new Error('Failed to fetch tickets');
+        }
+        ticketsData = await response.json();
+        console.log('Loaded tickets:', ticketsData.length);
+        
+        updateDashboardStats(ticketsData);
+        updateFilterCounts(ticketsData);
+        updateStatusChart(ticketsData);
+        updateCalendarStats(); // Update calendar with new data
+        
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        showError('Failed to load dashboard data');
+    }
+}
+
 console.log('Dashboard JS loaded successfully');
