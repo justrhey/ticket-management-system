@@ -770,4 +770,203 @@ async function loadDashboardData() {
     }
 }
 
+// ===== LOGOUT FUNCTIONALITY =====
+function initializeLogoutButton() {
+    const logoutBtn = document.querySelector('.logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutWithConfirmation();
+        });
+    }
+    
+    // Also support manual logout buttons
+    const manualLogoutBtns = document.querySelectorAll('[onclick*="logout"]');
+    manualLogoutBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutWithConfirmation();
+        });
+    });
+}
+
+function logoutWithConfirmation() {
+    // Show confirmation dialog
+    const modal = document.getElementById('logoutConfirmModal');
+    if (modal) {
+        modal.style.display = 'block';
+        return;
+    }
+    
+    // Create confirmation modal if it doesn't exist
+    const confirmModal = document.createElement('div');
+    confirmModal.id = 'logoutConfirmModal';
+    confirmModal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+    `;
+    
+    confirmModal.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 8px; text-align: center; min-width: 320px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+            <h3 style="margin: 0 0 15px 0; color: #333;">Confirm Logout</h3>
+            <p style="margin: 0 0 25px 0; color: #666;">Are you sure you want to logout?</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="confirmLogout()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                    Yes, Logout
+                </button>
+                <button onclick="cancelLogout()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(confirmModal);
+}
+
+function confirmLogout() {
+    const modal = document.getElementById('logoutConfirmModal');
+    if (modal) {
+        modal.remove();
+    }
+    performLogout();
+}
+
+function cancelLogout() {
+    const modal = document.getElementById('logoutConfirmModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+async function performLogout() {
+    try {
+        console.log('Attempting logout...');
+        
+        // Show loading state
+        showLogoutNotification('Logging out...', 'info');
+        
+        // Call logout endpoint
+        const response = await fetch('/logout', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        });
+
+        console.log('Logout response status:', response.status);
+        
+        // Clear client-side storage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Stop any intervals
+        clearAllIntervals();
+        
+        // Show success message
+        showLogoutNotification('Logged out successfully', 'success');
+        
+        // Redirect to login page after a short delay
+        setTimeout(() => {
+            window.location.href = '/login?logout=true';
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Logout error:', error);
+        
+        // Force redirect even if there's an error
+        localStorage.clear();
+        sessionStorage.clear();
+        showLogoutNotification('Logging out...', 'info');
+        
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 500);
+    }
+}
+
+function showLogoutNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `logout-notification ${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#0041d8'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        z-index: 10001;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+    `;
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 3000);
+}
+
+function clearAllIntervals() {
+    // Get the highest interval ID
+    const highestId = window.setTimeout(() => {}, 0);
+    for (let i = 0; i < highestId; i++) {
+        window.clearInterval(i);
+    }
+}
+
+// Simple logout function for direct calling
+function quickLogout() {
+    fetch('/logout', {
+        method: 'POST',
+        credentials: 'include'
+    })
+    .finally(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/login';
+    });
+}
+
+// ===== UPDATE YOUR EXISTING DOMCONTENTLOADED =====
+// Replace your current DOMContentLoaded with this:
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard loading...');
+    initializeLogoutButton(); // Add this line
+    loadDashboardData();
+    loadRecentTickets();
+    initializeCalendar();
+});
+
+// ===== ADD TO YOUR WINDOW EXPORTS =====
+// Add these to make functions globally available
+window.logout = logoutWithConfirmation;
+window.performLogout = performLogout;
+window.quickLogout = quickLogout;
+window.confirmLogout = confirmLogout;
+window.cancelLogout = cancelLogout;
+
+// Keep your existing exports
+window.refreshDashboard = refreshDashboard;
+window.exportData = exportData;
+window.previousMonth = previousMonth;
+window.nextMonth = nextMonth;
+window.filterTickets = filterTickets;
+
 console.log('Dashboard JS loaded successfully');

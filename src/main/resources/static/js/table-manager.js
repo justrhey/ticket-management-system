@@ -180,45 +180,50 @@ async function initializeCurrentUser() {
             };
             console.log('Current user loaded:', currentUser);
             updateUserInfoInUI();
-            
-            // Load tickets and users after current user is initialized
-            loadTickets();
         } else {
             console.warn('Could not load current user info, using default');
-            currentUser = {
-                id: null,
-                email: 'unknown@example.com',
-                fullName: 'Unknown User',
-                position: 'Unknown',
-                role: 'USER'
-            };
-            // Load tickets and users even if current user fails
-            loadTickets();
+            setDefaultUser();
         }
+        
+        // Load both tickets and users after current user is initialized
+        await Promise.all([loadTickets(), loadUsers()]);
+        
     } catch (error) {
         console.error('Error loading current user:', error);
-        currentUser = {
-            id: null,
-            email: 'unknown@example.com',
-            fullName: 'Unknown User',
-            position: 'Unknown',
-            role: 'USER'
-        };
-        // Load tickets and users even if current user fails
-        loadTickets();
+        setDefaultUser();
+        await Promise.all([loadTickets(), loadUsers()]);
     }
+}
+
+function setDefaultUser() {
+    currentUser = {
+        id: null,
+        email: 'guest@example.com',
+        fullName: 'Guest User',
+        position: 'Guest',
+        role: 'USER'
+    };
+    updateUserInfoInUI();
 }
 
 // Update UI with current user information
 function updateUserInfoInUI() {
     const userInfoElement = document.getElementById('current-user-info');
     if (userInfoElement) {
-        userInfoElement.textContent = `${currentUser.fullName} (${currentUser.position})`;
+        if (currentUser.fullName && currentUser.position) {
+            userInfoElement.textContent = `${currentUser.fullName} (${currentUser.position})`;
+        } else {
+            userInfoElement.textContent = 'Guest User';
+        }
     }
     
     const requesterField = document.getElementById('current-requester');
     if (requesterField) {
-        requesterField.textContent = `${currentUser.fullName} - ${currentUser.email}`;
+        if (currentUser.fullName && currentUser.email) {
+            requesterField.textContent = `${currentUser.fullName} - ${currentUser.email}`;
+        } else {
+            requesterField.textContent = 'Guest User - guest@example.com';
+        }
     }
 }
 
@@ -341,7 +346,7 @@ function updateAssignmentDropdowns() {
         
         itStaff.forEach(user => {
             const option = document.createElement('option');
-            option.value = user.id; // Store user ID instead of name
+            option.value = user.id;
             option.textContent = `${user.fullName} - ${user.position}`;
             bulkAssigneeSelect.appendChild(option);
         });
@@ -361,7 +366,7 @@ function updateAssignmentDropdowns() {
         
         itStaff.forEach(user => {
             const option = document.createElement('option');
-            option.value = user.id; // Store user ID instead of name
+            option.value = user.id;
             option.textContent = `${user.fullName} - ${user.position}`;
             editAssigneeSelect.appendChild(option);
         });
@@ -1033,7 +1038,7 @@ async function saveTicketEdit() {
     const subject = document.getElementById('edit-subject')?.value;
     const status = document.getElementById('edit-status')?.value;
     const priority = document.getElementById('edit-priority')?.value;
-    const assignedPerson = document.getElementById('edit-assignedPerson')?.value; // Now stores user ID
+    const assignedPerson = document.getElementById('edit-assignedPerson')?.value;
     const itComment = document.getElementById('edit-it-comment')?.value;
 
     if (!subject || !assignedPerson) {
@@ -1062,8 +1067,8 @@ async function saveTicketEdit() {
                 subject: subject,
                 ticketStatus: status,
                 priority: priority,
-                assignedPerson: assignedPerson, // Store user ID
-                assignedPersonName: assignedPersonName, // Store display name
+                assignedPerson: assignedPerson,
+                assignedPersonName: assignedPersonName,
                 itComment: itComment 
             })
         });
@@ -1799,6 +1804,27 @@ function refreshData() {
     showNotification('Refreshed', 'Ticket data refreshed', 'info');
 }
 
+async function loadUsers() {
+    try {
+        console.log('Loading users from:', USERS_API);
+        const response = await fetch(USERS_API);
+        if (!response.ok) {
+            throw new Error(`Failed to load users: ${response.status} ${response.statusText}`);
+        }
+        
+        allUsers = await response.json();
+        console.log('Loaded users:', allUsers.length);
+        displayUsers(allUsers);
+        updateAssignmentDropdowns();
+        
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showNotification('Error', 'Failed to load users: ' + error.message, 'error');
+        allUsers = []; // Reset to empty array on error
+    }
+}
+
+
 // User Management Functions
 function openUserManagement() {
     loadUsers();
@@ -1815,25 +1841,21 @@ function closeUserManagement() {
     }
 }
 
-async function loadUsers() {
-    try {
-        const response = await fetch(USERS_API);
-        if (!response.ok) throw new Error('Failed to load users');
-        
-        allUsers = await response.json();
-        displayUsers(allUsers);
-        updateAssignmentDropdowns(); // Update assignment dropdowns after loading users
-    } catch (error) {
-        console.error('Error loading users:', error);
-        showNotification('Error', 'Failed to load users', 'error');
-    }
-}
 
 function displayUsers(users) {
     const tableBody = document.getElementById('usersTableBody');
     if (!tableBody) return;
     
     tableBody.innerHTML = '';
+    
+    if (users.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center">No users found</td>
+            </tr>
+        `;
+        return;
+    }
     
     users.forEach(user => {
         const row = document.createElement('tr');
@@ -1876,8 +1898,10 @@ function openAddUserModal() {
     if (form) form.reset();
     
     // Clear the position fields
-    document.getElementById('userPositionSearch').value = '';
-    document.getElementById('userPosition').value = '';
+    const positionSearch = document.getElementById('userPositionSearch');
+    const positionHidden = document.getElementById('userPosition');
+    if (positionSearch) positionSearch.value = '';
+    if (positionHidden) positionHidden.value = '';
     
     if (modal) {
         modal.style.display = 'block';
@@ -1895,7 +1919,7 @@ function closeUserModal() {
 async function saveUser() {
     const fullName = document.getElementById('userFullName')?.value;
     const email = document.getElementById('userEmail')?.value;
-    const position = document.getElementById('userPosition')?.value; // From hidden field
+    const position = document.getElementById('userPosition')?.value;
     const role = document.getElementById('userRole')?.value;
     const password = document.getElementById('userPassword')?.value;
     
@@ -1930,6 +1954,8 @@ async function saveUser() {
         const url = currentEditingUserId ? `${USERS_API}/${currentEditingUserId}` : USERS_API;
         const method = currentEditingUserId ? 'PUT' : 'POST';
         
+        console.log('Saving user:', userData);
+        
         const response = await fetch(url, {
             method,
             headers: {
@@ -1940,10 +1966,17 @@ async function saveUser() {
         
         if (response.ok) {
             closeUserModal();
-            await loadUsers();
+            
+            // Reload both users and tickets to ensure assignment dropdowns are updated
+            await Promise.all([
+                loadUsers(),
+                loadTickets()
+            ]);
+            
             showNotification('Success', 
                 currentEditingUserId ? 'User updated successfully' : 'User created successfully', 
                 'success');
+                
         } else {
             const errorText = await response.text();
             showNotification('Error', 'Failed to save user: ' + errorText, 'error');
@@ -1955,7 +1988,10 @@ async function saveUser() {
 
 function editUser(userId) {
     const user = allUsers.find(u => u.id === userId);
-    if (!user) return;
+    if (!user) {
+        showNotification('Error', 'User not found', 'error');
+        return;
+    }
     
     currentEditingUserId = userId;
     
@@ -1990,7 +2026,11 @@ async function deleteUser(userId) {
         });
         
         if (response.ok) {
-            await loadUsers();
+            // Reload both users and tickets
+            await Promise.all([
+                loadUsers(),
+                loadTickets()
+            ]);
             showNotification('Success', 'User deleted successfully', 'success');
         } else {
             const errorText = await response.text();
@@ -2039,7 +2079,10 @@ function exportUsersToCSV() {
 // Password update functionality for super_admin
 function openPasswordUpdateModal(userId) {
     const user = allUsers.find(u => u.id === userId);
-    if (!user) return;
+    if (!user) {
+        showNotification('Error', 'User not found', 'error');
+        return;
+    }
     
     currentEditingUserId = userId;
     
@@ -2120,7 +2163,7 @@ window.onclick = function(event) {
     const modals = [
         'editModal', 'viewModal', 'bulkModal', 'deleteModal', 
         'notificationModal', 'userManagementModal', 'userModal',
-        'passwordUpdateModal'  // Add the new modal
+        'passwordUpdateModal'
     ];
     modals.forEach(modalId => {
         const modal = document.getElementById(modalId);
