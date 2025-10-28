@@ -48,3 +48,7 @@ target/
 # Temporary folders
 tmp/
 temp/
+
+application.properties
+docker.yaml
+docker-compose.yml
