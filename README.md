@@ -1,5 +1,4 @@
 
-
 ---
 
 # Ticket Management System
@@ -21,6 +20,17 @@ This project is a simple internal tool for managing tickets with a single dashbo
 It includes essential ticket CRUD operations, live updates, and notifications without user management complexity.
 
 ---
+
+## Screenshot
+
+<img width="1898" height="1016" alt="2025-10-19-194330_hyprshot" src="https://github.com/user-attachments/assets/fc64956f-f2ff-4868-a9b9-fd8704cc868d" />
+
+
+<img width="1920" height="1080" alt="2025-10-27-114001_hyprshot" src="https://github.com/user-attachments/assets/4d825dd1-112f-4025-b7a8-a986a0dd2be5" />
+
+
+---
+
 
 ## Features
 
