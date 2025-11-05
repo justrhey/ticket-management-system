@@ -135,6 +135,6 @@ curl -X POST http://localhost:8080/api/tickets \
 <div align="center">
 
 **Made by [justrhey](https://github.com/justrhey)**
-[Back to Top](#ticket-management-system)
+[Back to Top]
 
 </div>
