@@ -49,6 +49,5 @@ target/
 tmp/
 temp/
 
-application.properties
 docker.yaml
 docker-compose.yml
