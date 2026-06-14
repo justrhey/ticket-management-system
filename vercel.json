@@ -1,0 +1,8 @@
+{
+  "builds": [
+    {
+      "src": "dockerfile",
+      "use": "@vercel/docker"
+    }
+  ]
+}
