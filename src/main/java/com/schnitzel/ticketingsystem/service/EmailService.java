@@ -9,13 +9,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
-    @Autowired
+    @Autowired(required = false)
     private JavaMailSender mailSender;
     
     @Value("${it.company.email:waytoogeeked69@gmail.com}")
     private String itCompanyEmail;
     
     public void sendNewTicketNotification(String requesterName, String subject, String description) {
+        if (mailSender == null) {
+            System.out.println(" Mail sender not configured, skipping email notification");
+            return;
+        }
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(itCompanyEmail);
